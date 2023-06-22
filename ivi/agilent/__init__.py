@@ -57,6 +57,7 @@ from .agilentMSOX3052A import agilentMSOX3052A
 from .agilentMSOX3054A import agilentMSOX3054A
 from .agilentMSOX3102A import agilentMSOX3102A
 from .agilentMSOX3104A import agilentMSOX3104A
+from .keysightMSOX3024T import keysightMSOX3024T
 # InfiniiVision 4000A
 from .agilentDSOX4022A import agilentDSOX4022A
 from .agilentDSOX4024A import agilentDSOX4024A
