@@ -49,7 +49,7 @@ class testequityf4(ivi.IviContainer):
         self._part_temperature_decimal_config = 1 #default to 500 means 50.0degC
         self._temperature_unit = 1 #default to degC
     
-    #grab the decimal configurations for the controller and cache them.  provide a method to change them if allowed (i.e. if someone changes the defualt config from TestEquity).
+    #grab the decimal configurations for the controller and cache them.  provide a method to change them if allowed (i.e. if someone changes the default config from TestEquity).
     def _get_temperature_decimal_config(self):
        if not self._driver_operation_simulate and not self._get_cache_valid():
            self._temperature_decimal_config = self._read_register(606)
