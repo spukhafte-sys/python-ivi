@@ -33,9 +33,8 @@ class sunEC1X(ivi.Driver):
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', 'SUN EC1x')
 
-        super(sunEC1X, self).__init__(*args, **kwargs)
+        super(sunEC1X, self).__init__(*args, cache=False, **kwargs)
 
-        self._driver_operation_cache = False
         self._identity_description = 'Sun Systems EC1x Environment Chamber'
         self._identity_identifier = ''
         self._identity_revision = ''
@@ -56,7 +55,7 @@ class sunEC1X(ivi.Driver):
 #       self._part_temperature_decimal_config = 1 #default to 500 means 50.0degC
 #       self._temperature_unit = 1 #default to degC
     
-    def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
+    def _initialize(self, resource=None, id_query=False, reset=False, cache=False, **keywargs):
         "Opens an I/O session to the instrument."
 
         super(sunEC1X, self)._initialize(resource, id_query, reset, **keywargs)
@@ -66,16 +65,16 @@ class sunEC1X(ivi.Driver):
             self._clear()
 
         # check ID
-        if id_query and not self._driver_operation_simulate:
-            id = self.identity.instrument_model
-            id_check = self._instrument_id
-            id_short = id[:len(id_check)]
-            if id_short != id_check:
-                raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
+#       if id_query and not self._driver_operation_simulate:
+#           id = self.identity.instrument_model
+#           id_check = self._instrument_id
+#           id_short = id[:len(id_check)]
+#           if id_short != id_check:
+#               raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
 
         # reset
-        if reset:
-            self.utility_reset()
+#       if reset:
+#           self.utility_reset()
 
     def _load_id_string(self):
         if self._driver_operation_simulate:
@@ -94,54 +93,24 @@ class sunEC1X(ivi.Driver):
             self._set_cache_valid(True, 'identity_instrument_firmware_revision')
 
     def _get_identity_instrument_manufacturer(self):
-        if self._get_cache_valid():
-            return self._identity_instrument_manufacturer
-        self._load_id_string()
         return self._identity_instrument_manufacturer
 
     def _get_identity_instrument_model(self):
-        if self._get_cache_valid():
-            return self._identity_instrument_model
-        self._load_id_string()
         return self._identity_instrument_model
 
     def _get_identity_instrument_serial_number(self):
-        if self._get_cache_valid():
-            return self._identity_instrument_serial_number
-        self._load_id_string()
         return self._identity_instrument_serial_number
 
     def _get_identity_instrument_firmware_revision(self):
-        if self._get_cache_valid():
-            return self._identity_instrument_firmware_revision
-        self._load_id_string()
         return self._identity_instrument_firmware_revision
 
     def _get_temperature(self):
         if not self._driver_operation_simulate: 
-            resp=int(self._read_register(100))
-            if self._temperature_decimal_config==1:
-                temperature=float(resp)/10
-            else:
-                temperature=float(resp)
-            return temperature
+            pass
         return 0
 
     def _get_temperature_setpoint(self):
-        resp=int(self._read_register(300))
-        #print(resp)
-        #print(self._temperature_decimal_config)
-        if self._temperature_decimal_config==1:
-            temperature=float(resp)/10
-        else:
-            temperature=float(resp)
-        return temperature
+        return 0
         
     def _set_temperature_setpoint(self, value):
-        if self._temperature_decimal_config==1:
-            temperature=int(float(value)*10)
-        else:
-            temperature=int(value)        
-          
-        if not self._driver_operation_simulate: 
-            self._write_register(300, temperature)
+        return True
