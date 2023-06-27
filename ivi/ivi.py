@@ -83,7 +83,7 @@ class IviException(Exception): pass
 class IviDriverException(IviException): pass
 class FileFormatException(IviDriverException): pass
 class IdQueryFailedException(IviDriverException): pass
-class InstrumentStatusExcpetion(IviDriverException): pass
+class InstrumentStatusException(IviDriverException): pass
 class InvalidOptionValueException(IviDriverException): pass
 class IOException(IviDriverException): pass
 class IOTimeoutException(IviDriverException): pass
