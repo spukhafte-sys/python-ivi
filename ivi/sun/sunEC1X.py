@@ -35,10 +35,13 @@ class sunEC1X(ivi.Driver):
     STATUS_HEATER = 4
     STATUS_COOLER = 5
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, cache=False, **kwargs):
+        if cache:
+            raise InvalidOptionValueException('Cache not supported by driver (use cache=False)')
+
         self.__dict__.setdefault('_instrument_id', 'SUN ')
 
-        super(sunEC1X, self).__init__(*args, id_query=True, cache=False, **kwargs)
+        super(sunEC1X, self).__init__(*args, id_query=True, **kwargs)
 
         self._identity_description = 'Sun Electronic Systems EC1x Environment Chamber'
         self._identity_identifier = ''
@@ -63,10 +66,10 @@ class sunEC1X(ivi.Driver):
                 self._set_lower_temperature_limit)
         self._add_property('hour_meter', self._get_hour_meter, )
 
-    def _initialize(self, resource=None, id_query=False, reset=False, cache=False, **keywargs):
+    def _initialize(self, resource=None, id_query=False, reset=False, **keywargs):
         "Opens an I/O session to the instrument."
 
-        super(sunEC1X, self)._initialize(resource, id_query, reset, cache=False, **keywargs)
+        super(sunEC1X, self)._initialize(resource, id_query, reset, **keywargs)
 
         # interface clear
         if not self._driver_operation_simulate:
