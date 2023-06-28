@@ -62,8 +62,10 @@ Instrument standard from the [IVI foundation](http://www.ivifoundation.org/).
     * Colby Instruments PDL10A Programmable Delay Line
     * DiCon Fiberoptics GP700 Programmable Fiberoptic Instrument
     * JDS Uniphase TB9 Series Optical Grating Filter
+    * Sun Electronics ECI1 environment chamber
     * Tektronix AM5030 programmable current probe amplifier
     * Tektronix OA5000 series optical attenuator
+    * TestEquity 140 Temperature Chamber
 
 ## Instrument communication
 
