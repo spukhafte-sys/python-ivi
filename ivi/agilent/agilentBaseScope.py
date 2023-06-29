@@ -488,6 +488,15 @@ class agilentBaseScope(scpi.common.IdnCommand, scpi.common.ErrorQuery, scpi.comm
         if reset:
             self.utility.reset()
 
+    def _utility_reset(self):
+        if not self._driver_operation_simulate:
+            self._write("*RST")
+            self._ask("*OPC?")
+            self._clear()
+            self.driver_operation.invalidate_all_attributes()
+
+    def _utility_reset_with_defaults(self):
+        self._utility_reset()
     
     def _utility_disable(self):
         pass

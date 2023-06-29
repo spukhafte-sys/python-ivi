@@ -98,7 +98,7 @@ class sunEC1X(ivi.Driver):
                             id_check, id[:len(id_check)])
         # reset
         if reset:
-            self.utility_reset()
+            self._utility_reset()
 
     def _utility_reset(self):
         self._write('ON')
@@ -106,7 +106,7 @@ class sunEC1X(ivi.Driver):
         self._write('ON')
 
     def _utility_reset_with_defaults(self):
-        self.utility_reset()
+        self._utility_reset()
 
     def _get_identity_instrument_manufacturer(self):
         return self._identity_instrument_manufacturer
