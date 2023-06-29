@@ -51,12 +51,12 @@ class sunEC1X(ivi.Driver):
 
         self._add_property('identity.instrument_serial_number',
                 self._get_identity_instrument_serial_number)
-        self._add_property('cooler_enabled', self._get_cooler_enabled, self._set_cooler_enabled)
-        self._add_property('heater_enabled', self._get_heater_enabled, self._set_heater_enabled)
+        self._add_property('cool_enabled', self._get_cool_enabled, self._set_cool_enabled)
+        self._add_property('heat_enabled', self._get_heat_enabled, self._set_heat_enabled)
         self._add_property('chamber_temperature', self._get_temperature, )
         self._add_property('chamber_temperature_setpoint',
                 self._get_temperature_setpoint, self._set_temperature_setpoint)
-        self._add_property('chamber_rate',
+        self._add_property('temperature_rate',
                 self._get_chamber_rate, self._set_chamber_rate)
         self._add_property('user_temperature', self._get_user_temperature)
         self._add_property('temperature_unit', self._get_temperature_unit)
@@ -159,24 +159,24 @@ class sunEC1X(ivi.Driver):
             self._write(f'RATE={value}')
         return True
 
-    def _get_heater_enabled(self):
+    def _get_heat_enabled(self):
         if self._driver_operation_simulate: 
             return True
         else:
             return(self._ask('STATUS?')[self.STATUS_HEATER] == 'Y')
 
-    def _set_heater_enabled(self, value):
+    def _set_heat_enabled(self, value):
         if not self._driver_operation_simulate: 
             self._write('HON' if value else 'HOFF')
         return True
 
-    def _get_cooler_enabled(self):
+    def _get_cool_enabled(self):
         if self._driver_operation_simulate: 
             return True
         else:
             return(self._ask('STATUS?')[self.STATUS_COOLER] == 'Y')
 
-    def _set_cooler_enabled(self, value):
+    def _set_cool_enabled(self, value):
         if not self._driver_operation_simulate: 
             self._write('CON' if value else 'COFF')
         return True

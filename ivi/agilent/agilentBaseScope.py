@@ -491,7 +491,7 @@ class agilentBaseScope(scpi.common.IdnCommand, scpi.common.ErrorQuery, scpi.comm
     def _utility_reset(self):
         if not self._driver_operation_simulate:
             self._write("*RST")
-            self._ask("*OPC?")
+            self._ask("*OPC?")  # Needed for MSOX3024T at least
             self._clear()
             self.driver_operation.invalidate_all_attributes()
 
