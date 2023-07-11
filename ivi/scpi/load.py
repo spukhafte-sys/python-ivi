@@ -77,7 +77,7 @@ TriggerSourceMapping = {
         'external': 'ext',
         'immediate': 'imm'}
 
-class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
+class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
            ivi.Driver,
            load.Base):
     "Generic SCPI IVI electronic load driver"
@@ -293,81 +293,9 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
         return 0.0
     
     
-class MultiPoint(load.MultiPoint):
-    "Extension IVI methods for DMMs capable of acquiring measurements based on multiple triggers"
-    
-    def _get_trigger_measurement_complete_destination(self):
-        return self._trigger_measurement_complete_destination
-    
-    def _set_trigger_measurement_complete_destination(self, value):
-        value = str(value)
-        self._trigger_measurement_complete_destination = value
-    
-    def _get_trigger_multi_point_sample_count(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            value = int(self._ask("sample:count?"))
-            self._trigger_multi_point_sample_count = value
-            self._set_cache_valid()
-        return self._trigger_multi_point_sample_count
-    
-    def _set_trigger_multi_point_sample_count(self, value):
-        value = int(value)
-        if not self._driver_operation_simulate:
-            self._write("sample:count %d" % value)
-        self._trigger_multi_point_sample_count = value
-        self._set_cache_valid()
-    
-    def _get_trigger_multi_point_sample_interval(self):
-        return self._trigger_multi_point_sample_interval
-    
-    def _set_trigger_multi_point_sample_interval(self, value):
-        value = int(value)
-        self._trigger_multi_point_sample_interval = value
-    
-    def _get_trigger_multi_point_sample_trigger(self):
-        return self._trigger_multi_point_sample_trigger
-    
-    def _set_trigger_multi_point_sample_trigger(self, value):
-        value = str(value)
-        self._trigger_multi_point_sample_trigger = value
-    
-    def _get_trigger_multi_point_count(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            value = self._ask("trigger:count?")
-            if float(value) >= 9.9e37:
-                value = float('inf')
-            else:
-                value = int(float(value))
-            self._trigger_multi_point_count = value
-            self._set_cache_valid()
-        return self._trigger_multi_point_count
-    
-    def _set_trigger_multi_point_count(self, value):
-        if float(value) >= 9.9e37 or float(value) == float('inf'):
-            value = float('inf')
-        else:
-            value = int(value)
-        if not self._driver_operation_simulate:
-            if value == float('inf'):
-                self._write("trigger:count inf")
-            else:
-                self._write("trigger:count %d" % value)
-        self._trigger_multi_point_count = value
-        self._set_cache_valid()
-    
-    def _measurement_fetch_multi_point(self, max_time, num_of_measurements = 0):
-        if not self._driver_operation_simulate:
-            return self._ask_for_values(":fetch?", array=False)
-        return [0.0 for i in range(self._trigger_multi_point_count*self._trigger_multi_point_sample_count)]
-    
-    def _measurement_read_multi_point(self, max_time, num_of_measurements = 0):
-        if not self._driver_operation_simulate:
-            return self._ask_for_values(":read?", array=False)
-        return [0.0 for i in range(self._trigger_multi_point_count*self._trigger_multi_point_sample_count)]
-    
-    
 class SoftwareTrigger(load.SoftwareTrigger):
-    "Extension IVI methods for DMMs that can initiate a measurement based on a software trigger signal"
+    """Extension IVI methods for electronic loads that can initiate a measurement
+    based on a software trigger signal"""
     
     def _send_software_trigger(self):
         if not self._driver_operation_simulate:

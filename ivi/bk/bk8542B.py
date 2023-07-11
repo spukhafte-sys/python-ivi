@@ -67,7 +67,7 @@ MeasurementResolutionMapping = {
         'two_wire_resistance': 'res:resolution',
         'four_wire_resistance': 'fres:resolution'}
 
-class bk8542B(scpi.load.Base, scpi.load.MultiPoint, scpi.load.SoftwareTrigger):
+class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
     "B&K Precision 8542BA IVI electronic load driver"
     
     def __init__(self, *args, **kwargs):
@@ -88,7 +88,7 @@ class bk8542B(scpi.load.Base, scpi.load.MultiPoint, scpi.load.SoftwareTrigger):
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['8542B']
     
-    def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
+    def _initialize(self, resource = None, id_query = True, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
         
         super(bk8542B, self)._initialize(resource, id_query, reset, **keywargs)
@@ -98,12 +98,33 @@ class bk8542B(scpi.load.Base, scpi.load.MultiPoint, scpi.load.SoftwareTrigger):
             self._clear()
         
         # check ID
-        if id_query and not self._driver_operation_simulate:
-            id = self.identity.instrument_model
-            id_check = self._instrument_id
-            id_short = id[:len(id_check)]
-            if id_short != id_check:
-                raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
+        if self._driver_operation_simulate:
+            self._identity_instrument_manufacturer = "Not available while simulating"
+            self._identity_instrument_model = "Not available while simulating"
+            self._identity_instrument_serial_number = "Not available while simulating"
+            self._identity_instrument_firmware_revision = "Not available while simulating"
+        else:
+            if id_query:
+                self._interface.term_char = '/n'
+                self._write('/n')
+                id = self._ask('*IDN?')
+                id_check = self._instrument_id
+                if id_check in id:
+                    id = id.split(',')
+                    self._identity_instrument_manufacturer = id[0]
+                    self._identity_instrument_model = id[1]
+                    self._identity_instrument_serial_number = id[2]
+                    self._identity_instrument_firmware_revision = id[3]
+                else:
+                    raise Exception("Instrument ID mismatch, expecting %s, got %s",
+                            id_check, id[:len(id_check)])
+
+#       if id_query and not self._driver_operation_simulate:
+#           id = self.identity.instrument_model
+#           id_check = self._instrument_id
+#           id_short = id[:len(id_check)]
+#           if id_short != id_check:
+#               raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
         
         # reset
         if reset:
