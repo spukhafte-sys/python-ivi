@@ -28,7 +28,7 @@ __all__ = [
         # Common functions
         "common",
         # IVI implementations
-        "dcpwr", "dmm"]
+        "load", "dcpwr", "dmm"]
 
 from . import *
 

@@ -2,9 +2,7 @@
 
 Python Interchangeable Virtual Instrument Library
 
-Copyright (c) 2012-2017 Alex Forencich
-
-Modified by Jeff Wurzbach 2014
+Copyright (c) 2014-2017 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,37 +24,17 @@ THE SOFTWARE.
 
 """
 
-__all__ = [
-        # Base IVI class
-        "ivi",
-        # IVI abstract classes
-        "scope",
-        "dmm",
-        "fgen",
-        "dcpwr",
-        "swtch",
-        "pwrmeter",
-        "specan",
-        "rfsiggen",
-        "counter",
-        # Extra IVI base classes
-        "extra",
-        # Generic IVI drivers
-        "scpi",
-        # IVI drivers
-        "agilent",
-        "bk",
-        "dicon",
-        "chroma",
-        "colby",
-        "ics",
-        "jdsu",
-        "lecroy",
-        "rigol",
-        "sun",
-        "tektronix",
-        "testequity"]
+from .agilentBaseESGD import *
 
-from .ivi import *
-from . import *
+class agilentE4438C(agilentBaseESGD):
+    "Agilent E4438C ESG-DP IVI RF signal generator driver"
+
+    def __init__(self, *args, **kwargs):
+        self.__dict__.setdefault('_instrument_id', 'ESG-D4000B')
+
+        super(agilentE4438C, self).__init__(*args, **kwargs)
+
+        self._frequency_low = 250e3
+        self._frequency_high = 3e9
+
 
