@@ -109,8 +109,8 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
         super(Base, self)._initialize(resource, id_query, reset, **keywargs)
         
         # interface clear
-        if not self._driver_operation_simulate:
-            self._clear()
+#       if not self._driver_operation_simulate:
+#           self._clear()
         
         # check ID
         if id_query and not self._driver_operation_simulate:
@@ -123,7 +123,6 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
         # reset
         if reset:
             self.utility.reset()
-        
     
     def _utility_disable(self):
         pass

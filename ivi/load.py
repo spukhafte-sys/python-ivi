@@ -34,9 +34,6 @@ MeasurementFunction = set(['dc_volts', 'ac_volts', 'dc_current', 'ac_current',
                 'two_wire_resistance', 'four_wire_resistance',
                 'ac_plus_dc_volts', 'ac_plus_dc_current', 'frequency',
                 'period', 'temperature'])
-ThermocoupleReferenceJunctionType = set(['internal', 'fixed'])
-ThermocoupleType = set(['b', 'c', 'd', 'e', 'g', 'j', 'k', 'n', 'r', 's', 't', 'u', 'v'])
-TemperatureTransducerType = set(['thermocouple', 'thermistor', 'two_wire_rtd', 'four_wire_rtd'])
 Slope = set(['positive', 'negative'])
 
 class Base(ivi.IviContainer):
@@ -242,7 +239,6 @@ class TriggerSlope(ivi.IviContainer):
         self._add_property('trigger.slope',
                         self._get_trigger_slope,
                         self._set_trigger_slope)
-        
     
     def _get_trigger_slope(self):
         return self._trigger_slope
@@ -251,7 +247,6 @@ class TriggerSlope(ivi.IviContainer):
         if value not in Slope:
             raise ivi.ValueNotSupportedException()
         self._trigger_slope = value
-    
     
 class SoftwareTrigger(ivi.IviContainer):
     "Extension IVI methods for electronic loads that can initiate a measurement based on a software trigger signal"
