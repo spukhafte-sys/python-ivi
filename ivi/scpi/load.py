@@ -30,39 +30,25 @@ from .. import ivi
 from .. import load
 from . import common
 
-MeasurementFunctionMapping = {
-        'dc_volts': 'volt',
-        'ac_volts': 'volt:ac',
-        'dc_current': 'curr',
-        'ac_current': 'curr:ac',
-        'two_wire_resistance': 'res',
-        'four_wire_resistance': 'fres',
-        'frequency': 'freq',
-        'period': 'per',
-        'temperature': 'temp',
-        'capacitance': 'cap',
-        'continuity': 'cont',
-        'diode': 'diod'}
+LoadModeMapping = {
+        'constant_current': 'current',
+        'constant_voltage': 'voltage',
+        'constant_resistance': 'resistance',
+        'constant_power': 'power',
+        'dynamic': 'dynamic',
+        'led': 'led',
+        'constant_impedance': 'impedance',
+        }
 
 MeasurementRangeMapping = {
         'dc_volts': 'volt:dc:range',
-        'ac_volts': 'volt:ac:range',
         'dc_current': 'curr:dc:range',
-        'ac_current': 'curr:ac:range',
-        'two_wire_resistance': 'res:range',
-        'four_wire_resistance': 'fres:range',
-        'frequency': 'freq:range:lower',
-        'period': 'per:range:lower',
-        'capacitance': 'cap:range'}
+        }
 
 MeasurementAutoRangeMapping = {
         'dc_volts': 'volt:dc:range:auto',
-        'ac_volts': 'volt:ac:range:auto',
         'dc_current': 'curr:dc:range:auto',
-        'ac_current': 'curr:ac:range:auto',
-        'two_wire_resistance': 'res:range:auto',
-        'four_wire_resistance': 'fres:range:auto',
-        'capacitance': 'cap:range:auto'}
+        }
 
 MeasurementResolutionMapping = {
         'dc_volts': 'volt:dc:resolution',
@@ -73,14 +59,14 @@ MeasurementResolutionMapping = {
         'four_wire_resistance': 'fres:resolution'}
 
 TriggerSourceMapping = {
-        'bus': 'bus',
+        'bus': 'BUS',
         'external': 'ext',
         'immediate': 'imm'}
 
 class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
            ivi.Driver,
            load.Base):
-    "Generic SCPI IVI electronic load driver"
+    "Generic SCPI electronic load driver"
     
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', '')
@@ -92,25 +78,25 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
 
         self._self_test_delay = 40
         
-        self._identity_description = "Generic SCPI IVI electronic load driver"
+        self._identity_description = "Generic SCPI electronic load driver"
         self._identity_identifier = ""
         self._identity_revision = ""
         self._identity_vendor = ""
-        self._identity_instrument_manufacturer = ""
+        self._identity_instrument_manufacturer = "B&K Precision"
         self._identity_instrument_model = ""
         self._identity_instrument_firmware_revision = ""
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['LOAD']
     
-    def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
+    def _initialize(self, resource = None, id_query = False, reset = False, **kwargs):
         "Opens an I/O session to the instrument."
         
-        super(Base, self)._initialize(resource, id_query, reset, **keywargs)
+        super(Base, self)._initialize(resource, id_query, reset, **kwargs)
         
         # interface clear
-#       if not self._driver_operation_simulate:
-#           self._clear()
+        if not self._driver_operation_simulate:
+            self._clear()
         
         # check ID
         if id_query and not self._driver_operation_simulate:
@@ -132,34 +118,37 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
     
     def _utility_unlock_object(self):
         pass
+
+    def _clear(self):
+        self._write('*CLS')
+
+    def _remote(self):
+        self._write('SYST:REM')
+
+    def _local(self):
+        self._wirte('SYST:LOC')
     
-    def _get_measurement_function(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            value = self._ask(":sense:function?").lower().strip('"')
-            value = [k for k,v in MeasurementFunctionMapping.items() if v==value][0]
-            self._measurement_function = value
-            self._set_cache_valid()
-        return self._measurement_function
+    def _get_load_mode(self):
+        if not self._driver_operation_simulate:
+            value = self._ask(":sour:mode?").lower().strip('"')
+            value = [k for k,v in LoadModeMapping.items() if v==value][0]
+            self._load_mode = value
+        return self._load_mode
     
-    def _set_measurement_function(self, value):
-        if value not in MeasurementFunctionMapping:
+    def _set_load_mode(self, value):
+        if value not in LoadModeMapping:
             raise ivi.ValueNotSupportedException()
         if not self._driver_operation_simulate:
-            self._write(":sense:function '%s'" % MeasurementFunctionMapping[value])
-        self._measurement_function = value
-        self._set_cache_valid()
-        self._set_cache_valid(False, 'range')
-        self._set_cache_valid(False, 'auto_range')
-        self._set_cache_valid(False, 'resolution')
+            self._write(":sour:mode '%s'" % LoadModeMapping[value])
+        self._load_mode = value
     
     def _get_range(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             func = self._get_measurement_function()
             if func in MeasurementRangeMapping:
                 cmd = MeasurementRangeMapping[func]
                 value = float(self._ask("%s?" % (cmd)))
                 self._range = value
-                self._set_cache_valid()
         return self._range
     
     def _set_range(self, value):
@@ -172,10 +161,9 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
                 cmd = MeasurementRangeMapping[func]
                 self._write("%s %g" % (cmd, value))
         self._range = value
-        self._set_cache_valid()
     
     def _get_auto_range(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             func = self._get_measurement_function()
             if func in MeasurementAutoRangeMapping:
                 cmd = MeasurementAutoRangeMapping[func]
@@ -185,7 +173,6 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
                 elif value == 1:
                     value = 'on'
                 self._auto_range = value
-                self._set_cache_valid()
         return self._auto_range
     
     def _set_auto_range(self, value):
@@ -197,16 +184,14 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
                 cmd = MeasurementAutoRangeMapping[func]
                 self._write("%s %d" % (cmd, int(value == 'on')))
         self._auto_range = value
-        self._set_cache_valid()
     
     def _get_resolution(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             func = self._get_measurement_function()
             if func in MeasurementResolutionMapping:
                 cmd = MeasurementResolutionMapping[func]
                 value = float(self._ask("%s?" % (cmd)))
                 self._resolution = value
-                self._set_cache_valid()
         return self._resolution
     
     def _set_resolution(self, value):
@@ -219,13 +204,11 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
                 cmd = MeasurementResolutionMapping[func]
                 self._write("%s %g" % (cmd, value))
         self._resolution = value
-        self._set_cache_valid()
     
     def _get_trigger_delay(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             value = float(self._ask("trigger:delay?"))
             self._trigger_delay = value
-            self._set_cache_valid()
         return self._trigger_delay
     
     def _set_trigger_delay(self, value):
@@ -233,13 +216,11 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
         if not self._driver_operation_simulate:
             self._write('trigger:delay %g' % value)
         self._trigger_delay = value
-        self._set_cache_valid()
     
     def _get_trigger_delay_auto(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             value = bool(int(self._ask("trigger:delay:auto?")))
             self._trigger_delay_auto = value
-            self._set_cache_valid()
         return self._trigger_delay_auto
     
     def _set_trigger_delay_auto(self, value):
@@ -247,14 +228,12 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
         if not self._driver_operation_simulate:
             self._write('trigger:delay:auto %d' % int(value))
         self._trigger_delay_auto = value
-        self._set_cache_valid()
     
     def _get_trigger_source(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             value = self._ask("trigger:source?").lower()
             value = [k for k,v in TriggerSourceMapping.items() if v==value][0]
             self._trigger_source = value
-            self._set_cache_valid()
         return self._trigger_source
     
     def _set_trigger_source(self, value):
@@ -291,9 +270,8 @@ class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
             return float(self._ask(":read?"))
         return 0.0
     
-    
 class SoftwareTrigger(load.SoftwareTrigger):
-    """Extension IVI methods for electronic loads that can initiate a measurement
+    """Extension methods for electronic loads that can initiate a measurement
     based on a software trigger signal"""
     
     def _send_software_trigger(self):

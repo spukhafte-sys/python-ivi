@@ -2,6 +2,7 @@
 
 Python Interchangeable Virtual Instrument Library
 
+Copyright (c) 2012-2017 Alex Forencich
 Copyright (c) 2023 Fred Fierling
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,10 +31,7 @@ from . import ivi
 ApertureTimeUnits = set(['seconds', 'powerline_cycles'])
 Auto = set(['off', 'on', 'once'])
 Auto2 = set(['off', 'on'])
-MeasurementFunction = set(['dc_volts', 'ac_volts', 'dc_current', 'ac_current',
-                'two_wire_resistance', 'four_wire_resistance',
-                'ac_plus_dc_volts', 'ac_plus_dc_current', 'frequency',
-                'period', 'temperature'])
+LoadMode = set(['constant_current', 'constant_voltage', 'constant_resistance', 'constant_power',])
 Slope = set(['positive', 'negative'])
 
 class Base(ivi.IviContainer):
@@ -42,11 +40,11 @@ class Base(ivi.IviContainer):
     def __init__(self, *args, **kwargs):
         super(Base, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'Base'
         ivi.add_group_capability(self, cls+grp)
         
-        self._measurement_function = 'dc_volts'
+        self._load_mode = 'constant_current'
         self._range = 0
         self._auto_range = 'off'
         self._resolution = 1
@@ -55,53 +53,53 @@ class Base(ivi.IviContainer):
         self._trigger_delay_auto = False
         self._trigger_source = ''
         
-        self._add_property('measurement_function',
-                        self._get_measurement_function,
-                        self._set_measurement_function)
+        self._add_property('mode',
+            self._get_load_mode,
+            self._set_load_mode)
         self._add_property('range',
-                        self._get_range,
-                        self._set_range)
+            self._get_range,
+            self._set_range)
         self._add_property('auto_range',
-                        self._get_auto_range,
-                        self._set_auto_range)
+            self._get_auto_range,
+            self._set_auto_range)
         self._add_property('resolution',
-                        self._get_resolution,
-                        self._set_resolution)
+            self._get_resolution,
+            self._set_resolution)
         self._add_property('trigger.delay',
-                        self._get_trigger_delay,
-                        self._set_trigger_delay)
+            self._get_trigger_delay,
+            self._set_trigger_delay)
         self._add_property('trigger.delay_auto',
-                        self._get_trigger_delay_auto,
-                        self._set_trigger_delay_auto)
+            self._get_trigger_delay_auto,
+            self._set_trigger_delay_auto)
         self._add_property('trigger.source',
-                        self._get_trigger_source,
-                        self._set_trigger_source)
+            self._get_trigger_source,
+            self._set_trigger_source)
         self._add_method('configure',
-                        self._configure)
+            self._configure)
         self._add_method('trigger.configure',
-                        self._trigger_configure)
+            self._trigger_configure)
         self._add_method('measurement.abort',
-                        self._measurement_abort)
+            self._measurement_abort)
         self._add_method('measurement.fetch',
-                        self._measurement_fetch)
+            self._measurement_fetch)
         self._add_method('measurement.initiate',
-                        self._measurement_initiate)
+            self._measurement_initiate)
         self._add_method('measurement.is_out_of_range',
-                        self._measurement_is_out_of_range)
+            self._measurement_is_out_of_range)
         self._add_method('measurement.is_over_range',
-                        self._measurement_is_over_range)
+            self._measurement_is_over_range)
         self._add_method('measurement.is_under_range',
-                        self._measurement_is_under_range)
+            self._measurement_is_under_range)
         self._add_method('measurement.read',
-                        self._measurement_read)
+            self._measurement_read)
     
-    def _get_measurement_function(self):
-        return self._measurement_function
+    def _get_load_mode(self):
+        return self._load_mode
     
-    def _set_measurement_function(self, value):
-        if value not in MeasurementFunction:
+    def _set_load_mode(self, value):
+        if value not in LoadMode:
             raise ivi.ValueNotSupportedException()
-        self._measurement_function = value
+        self._load_mode = value
     
     def _get_range(self):
         return self._range
@@ -149,13 +147,12 @@ class Base(ivi.IviContainer):
     def _measurement_abort(self):
         pass
     
-    def _configure(self, function, range, resolution):
-        self._set_measurement_function(function)
+    def _configure(self, function, range):
+        self._set_load_mode(function)
         if range in Auto:
             self._set_auto_range(range)
         else:
             self._set_range(range)
-        self._set_resolution(resolution)
     
     def _trigger_configure(self, source, delay):
         self._set_trigger_source(source)
@@ -189,7 +186,7 @@ class ACMeasurement(ivi.IviContainer):
     def __init__(self, *args, **kwargs):
         super(ACMeasurement, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'ACMeasurement'
         ivi.add_group_capability(self, cls+grp)
         
@@ -230,7 +227,7 @@ class TriggerSlope(ivi.IviContainer):
     def __init__(self, *args, **kwargs):
         super(TriggerSlope, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'TriggerSlope'
         ivi.add_group_capability(self, cls+grp)
         
@@ -254,39 +251,39 @@ class SoftwareTrigger(ivi.IviContainer):
     def __init__(self, *args, **kwargs):
         super(SoftwareTrigger, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'SoftwareTrigger'
         ivi.add_group_capability(self, cls+grp)
         
         self._add_method('send_software_trigger',
-                        self._send_software_trigger,
-                        ivi.Doc("""
-                        This function sends a software-generated trigger to the instrument. It is
-                        only applicable for instruments using interfaces or protocols which
-                        support an explicit trigger function. For example, with GPIB this function
-                        could send a group execute trigger to the instrument. Other
-                        implementations might send a ``*TRG`` command.
+            self._send_software_trigger,
+            ivi.Doc("""
+            This function sends a software-generated trigger to the instrument. It is
+            only applicable for instruments using interfaces or protocols which
+            support an explicit trigger function. For example, with GPIB this function
+            could send a group execute trigger to the instrument. Other
+            implementations might send a ``*TRG`` command.
                         
-                        Since instruments interpret a software-generated trigger in a wide variety
-                        of ways, the precise response of the instrument to this trigger is not
-                        defined. Note that SCPI details a possible implementation.
+            Since instruments interpret a software-generated trigger in a wide variety
+            of ways, the precise response of the instrument to this trigger is not
+            defined. Note that SCPI details a possible implementation.
                         
-                        This function should not use resources which are potentially shared by
-                        other devices (for example, the VXI trigger lines). Use of such shared
-                        resources may have undesirable effects on other devices.
+            This function should not use resources which are potentially shared by
+            other devices (for example, the VXI trigger lines). Use of such shared
+            resources may have undesirable effects on other devices.
                         
-                        This function should not check the instrument status. Typically, the
-                        end-user calls this function only in a sequence of calls to other
-                        low-level driver functions. The sequence performs one operation. The
-                        end-user uses the low-level functions to optimize one or more aspects of
-                        interaction with the instrument. To check the instrument status, call the
-                        appropriate error query function at the conclusion of the sequence.
+            This function should not check the instrument status. Typically, the
+            end-user calls this function only in a sequence of calls to other
+            low-level driver functions. The sequence performs one operation. The
+            end-user uses the low-level functions to optimize one or more aspects of
+            interaction with the instrument. To check the instrument status, call the
+            appropriate error query function at the conclusion of the sequence.
                         
-                        The trigger source attribute must accept Software Trigger as a valid
-                        setting for this function to work. If the trigger source is not set to
-                        Software Trigger, this function does nothing and returns the error Trigger
-                        Not Software.
-                        """, cls, grp, '13.2.1', 'send_software_trigger'))
+            The trigger source attribute must accept Software Trigger as a valid
+            setting for this function to work. If the trigger source is not set to
+            Software Trigger, this function does nothing and returns the error Trigger
+            Not Software.
+            """, cls, grp, '13.2.1', 'send_software_trigger'))
     
     def _send_software_trigger(self):
         pass
@@ -297,7 +294,7 @@ class DeviceInfo(ivi.IviContainer):
     def __init__(self, *args, **kwargs):
         super(DeviceInfo, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'DeviceInfo'
         ivi.add_group_capability(self, cls+grp)
         
@@ -321,7 +318,7 @@ class AutoRangeValue(ivi.IviContainer):
     def __init__(self, *args, **kwargs):
         super(AutoRangeValue, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'AutoRangeValue'
         ivi.add_group_capability(self, cls+grp)
         
@@ -333,14 +330,13 @@ class AutoRangeValue(ivi.IviContainer):
     def _get_advanced_actual_range(self):
         return self._advanced_actual_range
     
-    
 class AutoZero(ivi.IviContainer):
     "Extension IVI methods for electronic loads that can take an auto zero reading"
     
     def __init__(self, *args, **kwargs):
         super(AutoZero, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'AutoZero'
         ivi.add_group_capability(self, cls+grp)
         
@@ -350,7 +346,6 @@ class AutoZero(ivi.IviContainer):
                         self._get_advanced_auto_zero,
                         self._set_advanced_auto_zero)
         
-    
     def _get_advanced_auto_zero(self):
         return self._advanced_auto_zero
     
@@ -359,14 +354,13 @@ class AutoZero(ivi.IviContainer):
             return ivi.ValueNotSupportedException
         self._advanced_auto_zero = value
     
-    
 class PowerLineFrequency(ivi.IviContainer):
     "Extension IVI methods for electronic loads that can specify the power line frequency"
     
     def __init__(self, *args, **kwargs):
         super(PowerLineFrequency, self).__init__(*args, **kwargs)
         
-        cls = 'IviLoad'
+        cls = 'Load'
         grp = 'PowerLineFrequency'
         ivi.add_group_capability(self, cls+grp)
         
@@ -376,13 +370,9 @@ class PowerLineFrequency(ivi.IviContainer):
                         self._get_advanced_power_line_frequency,
                         self._set_advanced_power_line_frequency)
         
-    
     def _get_advanced_power_line_frequency(self):
         return self._advanced_power_line_frequency
     
     def _set_advanced_power_line_frequency(self, value):
         value = float(value)
         self._advanced_power_line_frequency = value
-    
-    
-

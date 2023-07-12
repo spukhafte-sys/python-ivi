@@ -31,17 +31,17 @@ from .. import ivi
 from .. import load
 from .. import scpi
 
-MeasurementFunctionMapping = {
-        'dc_volts': 'volt',
-        'ac_volts': 'volt:ac',
-        'dc_current': 'curr',
-        'ac_current': 'curr:ac',
-        'two_wire_resistance': 'res',
-        'four_wire_resistance': 'fres',
-        'frequency': 'freq',
-        'period': 'per',
-        'continuity': 'cont',
-        'diode': 'diod'}
+#MeasurementModeMapping = {
+#        'current': 'SOUR:FUNC',
+#        'voltage': 'SOUR:FUNC',
+#        'dc_current': 'curr',
+#        'ac_current': 'curr:ac',
+#        'two_wire_resistance': 'res',
+#        'four_wire_resistance': 'fres',
+#        'frequency': 'freq',
+#        'period': 'per',
+#        'continuity': 'cont',
+#        'diode': 'diod'}
 
 MeasurementRangeMapping = {
         'dc_volts': 'volt:dc:range',
@@ -68,7 +68,7 @@ MeasurementResolutionMapping = {
         'four_wire_resistance': 'fres:resolution'}
 
 class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
-    "B&K Precision 8542BA IVI electronic load driver"
+    "B&K Precision 8542BA electronic load driver"
     
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', 'B&K Precision, 8542B')
@@ -77,7 +77,7 @@ class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
         
         self._memory_size = 5
         
-        self._identity_description = "B&K Precision 8542B IVI electronic load driver"
+        self._identity_description = "B&K Precision 8542B electronic load driver"
         self._identity_identifier = ""
         self._identity_revision = ""
         self._identity_vendor = ""
@@ -87,24 +87,8 @@ class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['8542B']
-    
-    def _initialize(self, resource=None, id_query=False, reset=False, term_char='\n', **keywargs):
+
+    def _initialize(self, resource = None, id_query = False, reset = False, **kwargs):
         "Opens an I/O session to the instrument."
         
-        super(bk8542B, self)._initialize(resource, id_query, reset, **keywargs)
-        
-        # interface clear
-#       if not self._driver_operation_simulate:  
-#           self._clear()
-        
-        # check ID
-        if id_query and not self._driver_operation_simulate:
-            id = self.identity.instrument_model
-            id_check = self._instrument_id
-            id_short = id[:len(id_check)]
-            if id_short != id_check:
-                raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
-        
-        # reset
-        if reset:
-            self.utility.reset()
+        super(bk8542B, self)._initialize(resource, id_query, reset, **kwargs)
