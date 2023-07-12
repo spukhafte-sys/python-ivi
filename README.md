@@ -13,6 +13,9 @@ https://groups.google.com/d/forum/python-ivi
 
 Python IVI is a Python-based interpretation of the Interchangeable Virtual
 Instrument standard from the [IVI foundation](http://www.ivifoundation.org/).
+This repository is forked from Alex Forencich's original tour-de-force (v0.14.9).
+Post-fork drivers don't support caching of settings and might not have corresponding
+instrument classes in the IVI specification.
 
 ## Included drivers
 
@@ -59,6 +62,7 @@ Instrument standard from the [IVI foundation](http://www.ivifoundation.org/).
     * Agilent 8156A optical attenuator
     * Agilent 85644/5A tracking source
     * Agilent 86140B series optical spectrum analyzer
+    * B&K Precision 8542B electronic load
     * Colby Instruments PDL10A Programmable Delay Line
     * DiCon Fiberoptics GP700 Programmable Fiberoptic Instrument
     * JDS Uniphase TB9 Series Optical Grating Filter
@@ -99,7 +103,7 @@ specification.
 
 ## Requirements
 
-* Python 3
+* Python 3.9
 * [NumPy](http://www.numpy.org)
 * One or more communication extensions
 

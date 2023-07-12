@@ -87,8 +87,3 @@ class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['8542B']
-
-    def _initialize(self, resource = None, id_query = False, reset = False, **kwargs):
-        "Opens an I/O session to the instrument."
-        
-        super(bk8542B, self)._initialize(resource, id_query, reset, **kwargs)

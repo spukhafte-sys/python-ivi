@@ -63,9 +63,10 @@ TriggerSourceMapping = {
         'external': 'ext',
         'immediate': 'imm'}
 
-class Base(common.IdnCommand, #common.ErrorQuery, common.Reset, common.SelfTest,
+class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
+           load.Base,
            ivi.Driver,
-           load.Base):
+           ):
     "Generic SCPI electronic load driver"
     
     def __init__(self, *args, **kwargs):
