@@ -47,7 +47,6 @@ class Base(ivi.IviContainer):
         self._load_mode = 'constant_current'
         self._range = 0
         self._auto_range = 'off'
-        self._resolution = 1
         
         self._trigger_delay = 0
         self._trigger_delay_auto = False
@@ -62,9 +61,6 @@ class Base(ivi.IviContainer):
         self._add_property('auto_range',
             self._get_auto_range,
             self._set_auto_range)
-        self._add_property('resolution',
-            self._get_resolution,
-            self._set_resolution)
         self._add_property('trigger.delay',
             self._get_trigger_delay,
             self._set_trigger_delay)
@@ -115,13 +111,6 @@ class Base(ivi.IviContainer):
         if value not in Auto:
             raise ivi.ValueNotSupportedException()
         self._auto_range = value
-    
-    def _get_resolution(self):
-        return self._resolution
-    
-    def _set_resolution(self, value):
-        value = float(value)
-        self._resolution = value
     
     def _get_trigger_delay(self):
         return self._trigger_delay
@@ -178,7 +167,6 @@ class Base(ivi.IviContainer):
     
     def _measurement_read(self, max_time):
         return 0.0
-    
     
 class ACMeasurement(ivi.IviContainer):
     "Extension IVI methods for electronic loads that can take AC voltage or AC current measurements"

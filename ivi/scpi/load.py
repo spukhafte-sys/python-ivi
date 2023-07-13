@@ -50,14 +50,6 @@ MeasurementAutoRangeMapping = {
         'dc_current': 'curr:dc:range:auto',
         }
 
-MeasurementResolutionMapping = {
-        'dc_volts': 'volt:dc:resolution',
-        'ac_volts': 'volt:ac:resolution',
-        'dc_current': 'curr:dc:resolution',
-        'ac_current': 'curr:ac:resolution',
-        'two_wire_resistance': 'res:resolution',
-        'four_wire_resistance': 'fres:resolution'}
-
 TriggerSourceMapping = {
         'bus': 'BUS',
         'external': 'ext',
@@ -131,17 +123,18 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
     
     def _get_load_mode(self):
         if not self._driver_operation_simulate:
-            value = self._ask(":sour:mode?").lower().strip('"')
+            value = self._ask(":SOUR:MODE?").lower().strip('"')
             value = [k for k,v in LoadModeMapping.items() if v==value][0]
             self._load_mode = value
         return self._load_mode
     
     def _set_load_mode(self, value):
-        if value not in LoadModeMapping:
+        if value in LoadModeMapping:
+            if not self._driver_operation_simulate:
+                self._write(":SOUR:MODE '{LoadModeMapping[value]}'") 
+            self._load_mode = value
+        else:
             raise ivi.ValueNotSupportedException()
-        if not self._driver_operation_simulate:
-            self._write(":sour:mode '%s'" % LoadModeMapping[value])
-        self._load_mode = value
     
     def _get_range(self):
         if not self._driver_operation_simulate:
@@ -185,26 +178,6 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
                 cmd = MeasurementAutoRangeMapping[func]
                 self._write("%s %d" % (cmd, int(value == 'on')))
         self._auto_range = value
-    
-    def _get_resolution(self):
-        if not self._driver_operation_simulate:
-            func = self._get_measurement_function()
-            if func in MeasurementResolutionMapping:
-                cmd = MeasurementResolutionMapping[func]
-                value = float(self._ask("%s?" % (cmd)))
-                self._resolution = value
-        return self._resolution
-    
-    def _set_resolution(self, value):
-        value = float(value)
-        # round up to even power of 10
-        value = math.pow(10, math.ceil(math.log10(value)))
-        if not self._driver_operation_simulate:
-            func = self._get_measurement_function()
-            if func in MeasurementResolutionMapping:
-                cmd = MeasurementResolutionMapping[func]
-                self._write("%s %g" % (cmd, value))
-        self._resolution = value
     
     def _get_trigger_delay(self):
         if not self._driver_operation_simulate:

@@ -31,41 +31,15 @@ from .. import ivi
 from .. import load
 from .. import scpi
 
-#MeasurementModeMapping = {
-#        'current': 'SOUR:FUNC',
-#        'voltage': 'SOUR:FUNC',
-#        'dc_current': 'curr',
-#        'ac_current': 'curr:ac',
-#        'two_wire_resistance': 'res',
-#        'four_wire_resistance': 'fres',
-#        'frequency': 'freq',
-#        'period': 'per',
-#        'continuity': 'cont',
-#        'diode': 'diod'}
-
 MeasurementRangeMapping = {
         'dc_volts': 'volt:dc:range',
-        'ac_volts': 'volt:ac:range',
         'dc_current': 'curr:dc:range',
-        'ac_current': 'curr:ac:range',
-        'two_wire_resistance': 'res:range',
-        'four_wire_resistance': 'fres:range'}
+        }
 
 MeasurementAutoRangeMapping = {
         'dc_volts': 'volt:dc:range:auto',
-        'ac_volts': 'volt:ac:range:auto',
         'dc_current': 'curr:dc:range:auto',
-        'ac_current': 'curr:ac:range:auto',
-        'two_wire_resistance': 'res:range:auto',
-        'four_wire_resistance': 'fres:range:auto'}
-
-MeasurementResolutionMapping = {
-        'dc_volts': 'volt:dc:resolution',
-        'ac_volts': 'volt:ac:resolution',
-        'dc_current': 'curr:dc:resolution',
-        'ac_current': 'curr:ac:resolution',
-        'two_wire_resistance': 'res:resolution',
-        'four_wire_resistance': 'fres:resolution'}
+        }
 
 class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
     "B&K Precision 8542BA electronic load driver"
