@@ -28,9 +28,9 @@ import time
 import struct
 
 from .. import ivi
-from .. import load
+#from .. import load
 from .. import scpi
-
+'''
 MeasurementRangeMapping = {
         'dc_volts': 'volt:dc:range',
         'dc_current': 'curr:dc:range',
@@ -40,7 +40,7 @@ MeasurementAutoRangeMapping = {
         'dc_volts': 'volt:dc:range:auto',
         'dc_current': 'curr:dc:range:auto',
         }
-
+'''
 class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
     "B&K Precision 8542BA electronic load driver"
     
@@ -52,12 +52,12 @@ class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
         self._memory_size = 5
         
         self._identity_description = "B&K Precision 8542B electronic load driver"
-        self._identity_identifier = ""
-        self._identity_revision = ""
-        self._identity_vendor = ""
+#       self._identity_identifier = ""
+#       self._identity_revision = ""
+#       self._identity_vendor = ""
         self._identity_instrument_manufacturer = "B&K Precision"
-        self._identity_instrument_model = ""
-        self._identity_instrument_firmware_revision = ""
-        self._identity_specification_major_version = 4
-        self._identity_specification_minor_version = 1
+#       self._identity_instrument_model = ""
+#       self._identity_instrument_firmware_revision = ""
+#       self._identity_specification_major_version = 4
+#       self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['8542B']

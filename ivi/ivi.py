@@ -1852,8 +1852,11 @@ class Driver(DriverOperation, DriverIdentity, DriverUtility):
                         # connect with VXI-11
                         # Serial SCPI devices need a NL and the Agilent E5810A gateway doesn't 
                         # have a facility for appending NLs to connected serial devices.
-                        self._interface = vxi11.Instrument(resource,
-                            term_char='\n' if res_arg2.upper().startswith('COM') else None)
+                        if res_arg2 is not None and res_arg2.upper().startswith('COM'):
+                            term_char='\n'
+                        else:
+                            term_char = None
+                        self._interface = vxi11.Instrument(resource, term_char=term_char)
                     elif 'pyvisa' in globals():
                         # connect with PyVISA
                         self._interface = pyvisa.PyVisaInstrument(resource)

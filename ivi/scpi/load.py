@@ -2,6 +2,7 @@
 
 Python Interchangeable Virtual Instrument Library
 
+Copyright (c) 2012-2017 Alex Forencich
 Copyright (c) 2023 Fred Fierling
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,29 +32,29 @@ from .. import load
 from . import common
 
 LoadModeMapping = {
-        'constant_current': 'current',
-        'constant_voltage': 'voltage',
-        'constant_resistance': 'resistance',
-        'constant_power': 'power',
-        'dynamic': 'dynamic',
-        'led': 'led',
-        'constant_impedance': 'impedance',
+        'constant_current': 'CURRENT',
+        'constant_voltage': 'VOLTAGE',
+        'constant_resistance': 'RESISTANCE',
+        'constant_power': 'POWER',
+        'dynamic': 'DYNAMIC',
+        'led': 'LED',
+        'constant_impedance': 'IMPEDANCE',
         }
 
 MeasurementRangeMapping = {
-        'dc_volts': 'volt:dc:range',
-        'dc_current': 'curr:dc:range',
+        'dc_volts': 'VOLT:DC:RANGE',
+        'dc_current': 'CURR:DC:RANGE',
         }
 
 MeasurementAutoRangeMapping = {
-        'dc_volts': 'volt:dc:range:auto',
-        'dc_current': 'curr:dc:range:auto',
+        'dc_volts': 'VOLT:DC:RANGE:AUTO',
+        'dc_current': 'CURR:DC:RANGE:AUTO',
         }
 
 TriggerSourceMapping = {
         'bus': 'BUS',
-        'external': 'ext',
-        'immediate': 'imm'}
+        'external': 'EXT',
+        'immediate': 'IMM'}
 
 class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
            load.Base,
@@ -123,7 +124,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
     
     def _get_load_mode(self):
         if not self._driver_operation_simulate:
-            value = self._ask(":SOUR:MODE?").lower().strip('"')
+            value = self._ask(":SOUR:MODE?").upper().strip('"')
             value = [k for k,v in LoadModeMapping.items() if v==value][0]
             self._load_mode = value
         return self._load_mode
@@ -205,7 +206,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
     
     def _get_trigger_source(self):
         if not self._driver_operation_simulate:
-            value = self._ask("trigger:source?").lower()
+            value = self._ask("trigger:source?").upper()
             value = [k for k,v in TriggerSourceMapping.items() if v==value][0]
             self._trigger_source = value
         return self._trigger_source

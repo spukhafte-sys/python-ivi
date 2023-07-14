@@ -27,40 +27,84 @@ THE SOFTWARE.
 
 from . import ivi
 
+# Exceptions
+class ChannelNotEnabledException(ivi.IviException): pass
+
 # Parameter Values
-ApertureTimeUnits = set(['seconds', 'powerline_cycles'])
+#ApertureTimeUnits = set(['seconds', 'powerline_cycles'])
 Auto = set(['off', 'on', 'once'])
 Auto2 = set(['off', 'on'])
 LoadMode = set(['constant_current', 'constant_voltage', 'constant_resistance', 'constant_power',])
 Slope = set(['positive', 'negative'])
 
 class Base(ivi.IviContainer):
-    "Base IVI methods for electronic loads"
+    "Base methods for electronic loads"
     
     def __init__(self, *args, **kwargs):
+        self._channel_count = 1
+
         super(Base, self).__init__(*args, **kwargs)
         
         cls = 'Load'
         grp = 'Base'
         ivi.add_group_capability(self, cls+grp)
         
-        self._load_mode = 'constant_current'
-        self._range = 0
-        self._auto_range = 'off'
-        
+        self._measure_voltage = None
+        self._measure_current = None
+        self._channel_selected = 0
+        self._channel_name = list()       
+        self._channel_enabled = list()
+        self._channel_mode = list()
+        self._channel_measure_current = list()
+        self._channel_measure_voltage = list()
+        self._channel_measure_power = list()
+        self._channel_measure_resistance = list()
+        self._channel_current = list()
+        self._channel_current_range = list()
+        self._channel_voltage = list()
+        self._channel_voltage_range = list()
+        self._channel_range = list()
         self._trigger_delay = 0
         self._trigger_delay_auto = False
         self._trigger_source = ''
         
-        self._add_property('mode',
+        self._add_property('channels[].mode',
             self._get_load_mode,
             self._set_load_mode)
-        self._add_property('range',
+        self._add_property('channels[].measure.current',
             self._get_range,
             self._set_range)
-        self._add_property('auto_range',
+        self._add_property('channels[].measure.voltage',
+            self._get_range,
+            self._set_range)
+        self._add_property('channels[].current_range',
+            self._get_range,
+            self._set_range)
+        self._add_property('channels[].auto_range',
             self._get_auto_range,
             self._set_auto_range)
+        self._add_property('channels[].name',
+            self._get_channel_name,
+            None,
+            None,
+            ivi.Doc("""
+            This attribute returns the repeated capability identifier defined by
+            specific driver for the channel that corresponds to the index that the
+            user specifies. If the driver defines a qualified channel name, this
+            property returns the qualified name.
+
+            If the value that the user passes for the Index parameter is less than
+            zero or greater than the value of the channel count, the attribute raises
+            a SelectorRangeException.
+            """, cls, grp, 'N/A'))
+        self._add_property('channels[].enabled',
+            self._get_channel_enabled,
+            self._set_channel_enabled,
+            None,
+            ivi.Doc("""
+            If set to True, the load performs measurements on the channel.
+            """, cls, grp, 'N/A'))
+
         self._add_property('trigger.delay',
             self._get_trigger_delay,
             self._set_trigger_delay)
@@ -88,6 +132,26 @@ class Base(ivi.IviContainer):
             self._measurement_is_under_range)
         self._add_method('measurement.read',
             self._measurement_read)
+
+        self._init_channels()
+
+    def _init_channels(self):
+        try:
+            super(Base, self)._init_channels()
+        except AttributeError:
+            pass
+
+        self._channel_name = list()
+        self._channel_enabled = list()
+        self._channel_range = list()
+        for i in range(self._channel_count):
+            self._channel_name.append(f'CH{i+1:d}')
+            self._channel_enabled.append(False)
+            self._channel_mode.append('constant_current')
+            self._channel_range.append(None)
+
+        self.channels._set_list(self._channel_name)
+
     
     def _get_load_mode(self):
         return self._load_mode
@@ -107,6 +171,23 @@ class Base(ivi.IviContainer):
     def _get_auto_range(self):
         return self._auto_range
     
+    def _get_channel_name(self, index):
+        return self._channel_name[index]
+
+    def _get_channel_enabled(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        if not self._driver_operation_simulate:
+            self._channel_enabled[index] = bool(int(
+                self._ask(f":{self._channel_name[index]}:inp?")))
+        return self._channel_enabled[index]
+
+    def _set_channel_enabled(self, index, value):
+        value = bool(value)
+        index = ivi.get_index(self._channel_name, index)
+        if not self._driver_operation_simulate:
+            self._write("inp %d" % (int(value)))
+        self._channel_enabled[index] = value
+
     def _set_auto_range(self, value):
         if value not in Auto:
             raise ivi.ValueNotSupportedException()
@@ -167,9 +248,9 @@ class Base(ivi.IviContainer):
     
     def _measurement_read(self, max_time):
         return 0.0
-    
+"""   
 class ACMeasurement(ivi.IviContainer):
-    "Extension IVI methods for electronic loads that can take AC voltage or AC current measurements"
+    "Extension methods for electronic loads that can take AC voltage or AC current measurements"
     
     def __init__(self, *args, **kwargs):
         super(ACMeasurement, self).__init__(*args, **kwargs)
@@ -207,9 +288,9 @@ class ACMeasurement(ivi.IviContainer):
     def _ac_configure_bandwidth(self, min_f, max_f):
         self._set_ac_frequency_min(min_f)
         self._set_ac_frequency_max(max_f)
-    
+"""   
 class TriggerSlope(ivi.IviContainer):
-    """Extension IVI methods for electronic loads that can specify the polarity of
+    """Extension methods for electronic loads that can specify the polarity of
     the external trigger signal"""
     
     def __init__(self, *args, **kwargs):
@@ -234,7 +315,7 @@ class TriggerSlope(ivi.IviContainer):
         self._trigger_slope = value
     
 class SoftwareTrigger(ivi.IviContainer):
-    "Extension IVI methods for electronic loads that can initiate a measurement based on a software trigger signal"
+    "Extension methods for electronic loads that can initiate a measurement based on a software trigger signal"
     
     def __init__(self, *args, **kwargs):
         super(SoftwareTrigger, self).__init__(*args, **kwargs)
@@ -275,7 +356,7 @@ class SoftwareTrigger(ivi.IviContainer):
     
     def _send_software_trigger(self):
         pass
-    
+"""   
 class DeviceInfo(ivi.IviContainer):
     "A set of read-only attributes for electronic loads that can be queried to determine how they are presently configured"
     
@@ -301,7 +382,7 @@ class DeviceInfo(ivi.IviContainer):
         return self._advanced_aperture_time_units
     
 class AutoRangeValue(ivi.IviContainer):
-    "Extension IVI methods for electronic loads that can return the actual range value when auto ranging"
+    "Extension methods for electronic loads that can return the actual range value when auto ranging"
     
     def __init__(self, *args, **kwargs):
         super(AutoRangeValue, self).__init__(*args, **kwargs)
@@ -319,7 +400,7 @@ class AutoRangeValue(ivi.IviContainer):
         return self._advanced_actual_range
     
 class AutoZero(ivi.IviContainer):
-    "Extension IVI methods for electronic loads that can take an auto zero reading"
+    "Extension methods for electronic loads that can take an auto zero reading"
     
     def __init__(self, *args, **kwargs):
         super(AutoZero, self).__init__(*args, **kwargs)
@@ -343,7 +424,7 @@ class AutoZero(ivi.IviContainer):
         self._advanced_auto_zero = value
     
 class PowerLineFrequency(ivi.IviContainer):
-    "Extension IVI methods for electronic loads that can specify the power line frequency"
+    "Extension methods for electronic loads that can specify the power line frequency"
     
     def __init__(self, *args, **kwargs):
         super(PowerLineFrequency, self).__init__(*args, **kwargs)
@@ -364,3 +445,4 @@ class PowerLineFrequency(ivi.IviContainer):
     def _set_advanced_power_line_frequency(self, value):
         value = float(value)
         self._advanced_power_line_frequency = value
+"""
