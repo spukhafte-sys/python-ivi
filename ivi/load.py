@@ -53,7 +53,7 @@ class Base(ivi.IviContainer):
         self._mode = 'constant_current'
         self._current = 0
         self._current_protection = 0
-        self._voltage = 0
+        self._voltage_max = 0
         self._voltage_protection = 0
         self._trigger_delay = 0
         self._trigger_delay_auto = False
@@ -81,16 +81,17 @@ class Base(ivi.IviContainer):
             ivi.Doc("""
             Mode of the load.
             """))
-        self._add_property('voltage',
+        self._add_property('voltage.range',
             self._get_voltage,
             None,
             None,
             ivi.Doc("""
             Measured voltage across the load.
             """))
-        self._add_property('voltage_max',
-            self._get_trigger_delay,
-            self._set_trigger_delay)
+        self._add_method('voltage.fetch',
+            self._get_voltage)
+        self._add_method('voltage.max.fetch',
+            self._get_voltage)
         self._add_property('channels[].mode',
             self._get_mode,
             self._set_mode)
@@ -173,6 +174,8 @@ class Base(ivi.IviContainer):
             self._channel_name.append(f'CH{i+1:d}')
             self._channel_enabled.append(False)
             self._channel_mode.append('constant_current')
+            self._channel_current.append(0)
+            self._channel_voltage.append(0)
             self._channel_range.append(None)
 
         self.channels._set_list(self._channel_name)
@@ -190,15 +193,15 @@ class Base(ivi.IviContainer):
                 index = ivi.get_index(self._channel_name, args[0])
             else:
                 index = self._channel
-            self._channels_mode[index] = value
+            self._channel_mode[index] = value
         else:
             raise ivi.ValueNotSupportedException()
 
     def _get_voltage(self, *args):
-        if len(args) > 1:
-            return self._channels[args[1]].voltage
+        if len(args):
+            return self._channel_voltage[args[0]]
         else:
-            return self._channels[self._channel].voltage
+            return self._channel_voltage[self._channel]
     
     def _set_load_mode(self, value):
         if value in LoadMode:
