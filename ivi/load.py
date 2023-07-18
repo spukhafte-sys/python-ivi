@@ -49,34 +49,60 @@ class Base(ivi.IviContainer):
         grp = 'Base'
         ivi.add_group_capability(self, cls+grp)
         
-        self._measure_voltage = None
-        self._measure_current = None
-        self._channel_selected = 0
+        self._enabled = False
+        self._mode = 'constant_current'
+        self._current = 0
+        self._current_protection = 0
+        self._voltage = 0
+        self._voltage_protection = 0
+        self._trigger_delay = 0
+        self._trigger_delay_auto = False
+        self._trigger_source = ''
+        self._channel = 0
         self._channel_name = list()       
         self._channel_enabled = list()
         self._channel_mode = list()
-        self._channel_measure_current = list()
-        self._channel_measure_voltage = list()
-        self._channel_measure_power = list()
-        self._channel_measure_resistance = list()
+        self._channel_current = list()
+        self._channel_voltage = list()
+        self._channel_power_measure = list()
+        self._channel_resistance_measure = list()
+        self._channel_protection_current = list()
+        self._channel_protection_voltag = list()
         self._channel_current = list()
         self._channel_current_range = list()
         self._channel_voltage = list()
         self._channel_voltage_range = list()
         self._channel_range = list()
-        self._trigger_delay = 0
-        self._trigger_delay_auto = False
-        self._trigger_source = ''
         
+        self._add_property('mode',
+            self._get_mode,
+            self._set_mode,
+            None,
+            ivi.Doc("""
+            Mode of the load.
+            """))
+        self._add_property('voltage',
+            self._get_voltage,
+            None,
+            None,
+            ivi.Doc("""
+            Measured voltage across the load.
+            """))
+        self._add_property('voltage_max',
+            self._get_trigger_delay,
+            self._set_trigger_delay)
         self._add_property('channels[].mode',
-            self._get_load_mode,
-            self._set_load_mode)
-        self._add_property('channels[].measure.current',
+            self._get_mode,
+            self._set_mode)
+        self._add_property('channels[].current',
             self._get_range,
             self._set_range)
-        self._add_property('channels[].measure.voltage',
+        self._add_property('channels[].power',
             self._get_range,
             self._set_range)
+        self._add_property('channels[].voltage',
+            self._get_voltage,
+            None)
         self._add_property('channels[].current_range',
             self._get_range,
             self._set_range)
@@ -104,7 +130,6 @@ class Base(ivi.IviContainer):
             ivi.Doc("""
             If set to True, the load performs measurements on the channel.
             """, cls, grp, 'N/A'))
-
         self._add_property('trigger.delay',
             self._get_trigger_delay,
             self._set_trigger_delay)
@@ -152,7 +177,35 @@ class Base(ivi.IviContainer):
 
         self.channels._set_list(self._channel_name)
 
+    def _get_mode(self, *args):
+        if len(args):
+            return self._channel_mode[ivi.get_index(self._channel_name, args[0])]
+        else:
+            return self._channel_mode[self._channel]
     
+    def _set_mode(self, *args):
+        value = str(args[-1])
+        if value in LoadMode:
+            if len(args) == 2:
+                index = ivi.get_index(self._channel_name, args[0])
+            else:
+                index = self._channel
+            self._channels_mode[index] = value
+        else:
+            raise ivi.ValueNotSupportedException()
+
+    def _get_voltage(self, *args):
+        if len(args) > 1:
+            return self._channels[args[1]].voltage
+        else:
+            return self._channels[self._channel].voltage
+    
+    def _set_load_mode(self, value):
+        if value in LoadMode:
+            self._mode = value
+        else:
+            raise ivi.ValueNotSupportedException()
+
     def _get_load_mode(self):
         return self._load_mode
     
@@ -176,16 +229,11 @@ class Base(ivi.IviContainer):
 
     def _get_channel_enabled(self, index):
         index = ivi.get_index(self._channel_name, index)
-        if not self._driver_operation_simulate:
-            self._channel_enabled[index] = bool(int(
-                self._ask(f":{self._channel_name[index]}:inp?")))
         return self._channel_enabled[index]
 
     def _set_channel_enabled(self, index, value):
         value = bool(value)
         index = ivi.get_index(self._channel_name, index)
-        if not self._driver_operation_simulate:
-            self._write("inp %d" % (int(value)))
         self._channel_enabled[index] = value
 
     def _set_auto_range(self, value):

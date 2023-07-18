@@ -169,6 +169,20 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
                     value = 'on'
                 self._auto_range = value
         return self._auto_range
+
+    def _get_channel_enabled(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        if not self._driver_operation_simulate:
+            self._channel_enabled[index] = bool(int(
+                self._ask(f":{self._channel_name[index]}:inp?")))
+        return self._channel_enabled[index]
+
+    def _set_channel_enabled(self, index, value):
+        value = bool(value)
+        index = ivi.get_index(self._channel_name, index)
+        if not self._driver_operation_simulate:
+            self._write("inp %d" % (int(value)))
+        self._channel_enabled[index] = value
     
     def _set_auto_range(self, value):
         if value not in load.Auto2:
