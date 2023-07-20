@@ -226,11 +226,11 @@ class Base(ivi.IviContainer):
             self._channel_voltage_protection.append(0)
             self._channel_current_range.append(0)
             self._channel_current_range_auto.append(True)
-            self._channel_current_slew(0)
-            self._channel_current_slew_rise(0)
-            self._channel_current_slew_fall(0)
-            self._channel_current_protection(0)
-            self._channel_power_protection(0)
+            self._channel_current_slew.append(0)
+            self._channel_current_slew_rise.append(0)
+            self._channel_current_slew_fall.append(0)
+            self._channel_current_protection.append(0)
+            self._channel_power_protection.append(0)
             self._channel_resistance.append(None)
 
         self.channels._set_list(self._channel_name)
@@ -272,8 +272,8 @@ class Base(ivi.IviContainer):
     def _set_input_enabled(self, value):
         self._channel_input_enabled[self._channel] = bool(value)
     
-    def _get_input_enabled(self):
-        return self._channel_input_enabled[self._channel]
+    def _get_input_shorted(self):
+        return self._channel_input_shorted[self._channel]
 
     def _set_input_shorted(self, value):
         self._channel_input_shorted[self._channel] = bool(value)
