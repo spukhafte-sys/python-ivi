@@ -38,81 +38,45 @@ LoadMode = set(['constant_current', 'constant_voltage', 'constant_resistance', '
 Slope = set(['positive', 'negative'])
 
 class Base(ivi.IviContainer):
-    "Base methods for electronic loads"
+    "Base methods for electronic loads with multiple channels"
     
     def __init__(self, *args, **kwargs):
-        self._channel_count = 1
-
         super(Base, self).__init__(*args, **kwargs)
         
         cls = 'Load'
         grp = 'Base'
         ivi.add_group_capability(self, cls+grp)
         
-        self._enabled = False
-        self._mode = 'constant_current'
-        self._current = 0
-        self._current_protection = 0
-        self._voltage_max = 0
-        self._voltage_protection = 0
-        self._trigger_delay = 0
-        self._trigger_delay_auto = False
-        self._trigger_source = ''
+        self._channel_count = 1
         self._channel = 0
-        self._channel_name = list()       
-        self._channel_enabled = list()
-        self._channel_mode = list()
-        self._channel_current = list()
-        self._channel_voltage = list()
-        self._channel_power_measure = list()
-        self._channel_resistance_measure = list()
-        self._channel_protection_current = list()
-        self._channel_protection_voltag = list()
-        self._channel_current = list()
-        self._channel_current_range = list()
-        self._channel_voltage = list()
+        self._channel_name = []
+        self._channel_mode = []
+        self._channel_input_enabled = list()
+        self._channel_input_shorted = list()
         self._channel_voltage_range = list()
-        self._channel_range = list()
+        self._channel_voltage_range_auto = list()
+        self._channel_voltage_on = list()
+        self._channel_voltage_off = list()
+        self._channel_voltage_protection = list()
+        self._channel_current_range = list()
+        self._channel_current_range_auto = list()
+        self._channel_current_slew = list()
+        self._channel_current_slew_rise = list()
+        self._channel_current_slew_fall = list()
+        self._channel_current_protection = list()
+        self._channel_power_protection = list()
+        self._channel_resistance = list()
         
-        self._add_property('mode',
-            self._get_mode,
-            self._set_mode,
+        self._add_property('channel',
+            self._get_channel,
+            self._set_channel,
             None,
             ivi.Doc("""
-            Mode of the load.
+            Selects channel on loads with multiple channels.
             """))
-        self._add_property('voltage.range',
-            self._get_voltage,
-            None,
-            None,
-            ivi.Doc("""
-            Measured voltage across the load.
-            """))
-        self._add_method('voltage.fetch',
-            self._get_voltage)
-        self._add_method('voltage.max.fetch',
-            self._get_voltage)
-        self._add_property('channels[].mode',
-            self._get_mode,
-            self._set_mode)
-        self._add_property('channels[].current',
-            self._get_range,
-            self._set_range)
-        self._add_property('channels[].power',
-            self._get_range,
-            self._set_range)
-        self._add_property('channels[].voltage',
-            self._get_voltage,
-            None)
-        self._add_property('channels[].current_range',
-            self._get_range,
-            self._set_range)
-        self._add_property('channels[].auto_range',
-            self._get_auto_range,
-            self._set_auto_range)
-        self._add_property('channels[].name',
-            self._get_channel_name,
-            None,
+        self._add_property('name',
+            self._get_name,
+            self._set_name,
             None,
             ivi.Doc("""
             This attribute returns the repeated capability identifier defined by
@@ -124,13 +88,96 @@ class Base(ivi.IviContainer):
             zero or greater than the value of the channel count, the attribute raises
             a SelectorRangeException.
             """, cls, grp, 'N/A'))
-        self._add_property('channels[].enabled',
-            self._get_channel_enabled,
-            self._set_channel_enabled,
+        self._add_property('channels[].name',  # Demo multiple addressable channels
+            self._get_channel_name,
+            self._set_channel_name,
             None,
             ivi.Doc("""
-            If set to True, the load performs measurements on the channel.
+            This attribute returns the repeated capability identifier defined by
+            specific driver for the channel that corresponds to the index that the
+            user specifies. If the driver defines a qualified channel name, this
+            property returns the qualified name.
+
+            If the value that the user passes for the Index parameter is less than
+            zero or greater than the value of the channel count, the attribute raises
+            a SelectorRangeException.
             """, cls, grp, 'N/A'))
+        self._add_property('mode',
+            self._get_mode,
+            self._set_mode,
+            None,
+            ivi.Doc("""
+            Input mode of the load.
+            """))
+        self._add_property('input.enabled',
+            self._get_input_enabled,
+            self._set_input_enabled,
+            None,
+            ivi.Doc("""
+            Input state.
+            """))
+        self._add_property('input.shorted',
+            self._get_input_shorted,
+            self._set_input_shorted,
+            None,
+            ivi.Doc("""
+            Input is shorted.
+            """))
+        self._add_property('voltage.range',
+            self._get_voltage_range,
+            self._set_voltage_range,
+            None,
+            ivi.Doc("""
+            Set range given a maximum voltage.
+            """))
+        self._add_property('voltage.range_auto',
+            self._get_voltage_range_auto,
+            self._set_voltage_range_auto,
+            None,
+            ivi.Doc("""
+            Set range given a maximum voltage.
+            """))
+        self._add_property('voltage.on',
+            self._get_voltage_on,
+            self._set_voltage_on,
+            None,
+            ivi.Doc("""
+            Enable load at or above this voltage.
+            """))
+        self._add_property('voltage.off',
+            self._get_voltage_off,
+            self._set_voltage_off,
+            None,
+            ivi.Doc("""
+            Disable load at or below this voltage.
+            """))
+        self._add_property('voltage.protection',
+            self._get_voltage_protection,
+            self._set_voltage_protection,
+            None,
+            ivi.Doc("""
+            Disable load at or above this voltage.
+            """))
+        self._add_method('voltage.read',
+            self._get_voltage,
+            ivi.Doc("""
+            Measure and return voltage across load.
+            """))
+        self._add_method('voltage.min.fetch',
+            self._get_voltage,
+            ivi.Doc("""
+            Measure and return minimum voltage across load.
+            """))
+        self._add_method('voltage.max.fetch',
+            self._get_voltage,
+            ivi.Doc("""
+            Measure and return maximum voltage across load.
+            """))
+        self._add_method('voltage.ptp.fetch',
+            self._get_voltage,
+            ivi.Doc("""
+            Measure and return peak-to-peak ripple voltage across load.
+            """))
         self._add_property('trigger.delay',
             self._get_trigger_delay,
             self._set_trigger_delay)
@@ -167,83 +214,146 @@ class Base(ivi.IviContainer):
         except AttributeError:
             pass
 
-        self._channel_name = list()
-        self._channel_enabled = list()
-        self._channel_range = list()
         for i in range(self._channel_count):
-            self._channel_name.append(f'CH{i+1:d}')
-            self._channel_enabled.append(False)
             self._channel_mode.append('constant_current')
-            self._channel_current.append(0)
-            self._channel_voltage.append(0)
-            self._channel_range.append(None)
+            self._channel_name.append(f'CH{i+1:d}')
+            self._channel_input_enabled.append(False)
+            self._channel_input_shorted.append(False)
+            self._channel_voltage_range.append(0)
+            self._channel_voltage_range_auto.append(True)
+            self._channel_voltage_on.append(0.1)
+            self._channel_voltage_off.append(0)
+            self._channel_voltage_protection.append(0)
+            self._channel_current_range.append(0)
+            self._channel_current_range_auto.append(True)
+            self._channel_current_slew(0)
+            self._channel_current_slew_rise(0)
+            self._channel_current_slew_fall(0)
+            self._channel_current_protection(0)
+            self._channel_power_protection(0)
+            self._channel_resistance.append(None)
 
         self.channels._set_list(self._channel_name)
 
-    def _get_mode(self, *args):
-        if len(args):
-            return self._channel_mode[ivi.get_index(self._channel_name, args[0])]
-        else:
-            return self._channel_mode[self._channel]
-    
-    def _set_mode(self, *args):
-        value = str(args[-1])
-        if value in LoadMode:
-            if len(args) == 2:
-                index = ivi.get_index(self._channel_name, args[0])
-            else:
-                index = self._channel
-            self._channel_mode[index] = value
-        else:
-            raise ivi.ValueNotSupportedException()
+    def _get_channel(self):
+        return self._channel
 
-    def _get_voltage(self, *args):
-        if len(args):
-            return self._channel_voltage[args[0]]
-        else:
-            return self._channel_voltage[self._channel]
-    
-    def _set_load_mode(self, value):
-        if value in LoadMode:
-            self._mode = value
-        else:
-            raise ivi.ValueNotSupportedException()
+    def _set_channel(self, index):
+        # Set channel using either channel name or index
+        self._channel = ivi.get_index(self._channel_name, index)
 
-    def _get_load_mode(self):
-        return self._load_mode
-    
-    def _set_load_mode(self, value):
-        if value not in LoadMode:
-            raise ivi.ValueNotSupportedException()
-        self._load_mode = value
-    
-    def _get_range(self):
-        return self._range
-    
-    def _set_range(self, value):
-        value = float(value)
-        self._range = value
-    
-    def _get_auto_range(self):
-        return self._auto_range
-    
+    def _get_name(self):
+        return self._channel_name[self.channel]
+
+    def _set_name(self, value):
+        # Set name of current channel
+        self._channel_name[self._channel] = str(value)
+
     def _get_channel_name(self, index):
-        return self._channel_name[index]
+        return self._channel_name[self.channel]
 
-    def _get_channel_enabled(self, index):
+    def _set_channel_name(self, index, value):
+        # Set name of current channel
         index = ivi.get_index(self._channel_name, index)
-        return self._channel_enabled[index]
+        self._channel_name[index] = str(value)
 
-    def _set_channel_enabled(self, index, value):
-        value = bool(value)
-        index = ivi.get_index(self._channel_name, index)
-        self._channel_enabled[index] = value
-
-    def _set_auto_range(self, value):
-        if value not in Auto:
-            raise ivi.ValueNotSupportedException()
-        self._auto_range = value
+    def _get_mode(self):
+        return self._channel_mode[self._channel]
     
+    def _set_mode(self, value):
+        if value in LoadMode:
+            self._channel_mode[self._channel] = value
+        else:
+            raise ivi.ValueNotSupportedException()
+
+    def _get_input_enabled(self):
+        return self._channel_input_enabled[self._channel]
+
+    def _set_input_enabled(self, value):
+        self._channel_input_enabled[self._channel] = bool(value)
+    
+    def _get_input_enabled(self):
+        return self._channel_input_enabled[self._channel]
+
+    def _set_input_shorted(self, value):
+        self._channel_input_shorted[self._channel] = bool(value)
+
+    def _get_voltage_range(self):
+        return self._channel_voltage_range[self._channel]
+    
+    def _set_voltage_range(self, value):
+        self._channel_voltage_range[self._channel] = float(value)
+
+    def _get_voltage_range_auto(self):
+        return self._channel_voltage_auto[self._channel]
+
+    def _set_voltage_range_auto(self, value):
+        self._channel_voltage_auto[self._channel] = bool(value)
+
+    def _get_voltage_on(self):
+        return self._channel_voltage_on[self._channel]
+    
+    def _set_voltage_on(self, value):
+        self._channel_voltage_on[self._channel] = float(value)
+
+    def _get_voltage_off(self):
+        return self._channel_voltage_off[self._channel]
+    
+    def _set_voltage_off(self, value):
+        self._channel_voltage_off[self._channel] = float(value)
+
+    def _get_voltage_protection(self):
+        return self._channel_voltage_off[self._channel]
+    
+    def _set_voltage_protection(self, value):
+        self._channel_voltage_protection[self._channel] = float(value)
+
+    def _get_current_range(self):
+        return self._channel_current_range[self._channel]
+    
+    def _set_current_range(self, value):
+        self._channel_current_range[self._channel] = float(value)
+
+    def _get_current_range_auto(self):
+        return self._channel_current_auto[self._channel]
+
+    def _set_current_range_auto(self, value):
+        self._channel_current_auto[self._channel] = bool(value)
+
+    def _get_current_slew(self):
+        return self._channel_current_slew[self._channel]
+
+    def _set_current_slew(self, value):
+        self._channel_current_slew[self._channel] = float(value)
+
+    def _get_current_slew_rise(self):
+        return self._channel_current_slew_rise[self._channel]
+
+    def _set_current_slew_rise(self, value):
+        self._channel_current_slew_rise[self._channel] = float(value)
+
+    def _get_current_slew_fall(self):
+        return self._channel_current_slew_fall[self._channel]
+
+    def _set_current_slew_fall(self, value):
+        self._channel_current_slew_fall[self._channel] = float(value)
+
+    def _get_current_protection(self):
+        return self._channel_current_protection[self._channel]
+
+    def _set_current_protection(self, value):
+        self._channel_current_protection[self._channel] = float(value)
+
+    def _get_resistance(self):
+        return self._channel_resistance[self._channel]
+
+    def _set_resistance(self, value):
+        self._channel_resistance[self._channel] = float(value)
+
+    def _get_voltage(self):
+        return 0
+    
+
     def _get_trigger_delay(self):
         return self._trigger_delay
     

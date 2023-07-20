@@ -76,7 +76,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
         self._identity_identifier = ""
         self._identity_revision = ""
         self._identity_vendor = ""
-        self._identity_instrument_manufacturer = "B&K Precision"
+        self._identity_instrument_manufacturer = ""
         self._identity_instrument_model = ""
         self._identity_instrument_firmware_revision = ""
         self._identity_specification_major_version = 4
@@ -103,7 +103,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
         # reset
         if reset:
             self.utility.reset()
-    
+
     def _utility_disable(self):
         pass
     
@@ -121,41 +121,41 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
 
     def _local(self):
         self._wirte('SYST:LOC')
+
+    def _get_channel(self):
+        if not self._driver_operation_simulate:
+            value = self._ask(":CHAN?").upper().strip()
+            if value in ChannelNameMapping:
+                self._channel = int(ChannelNameMapping[value])
+        return self._channel
     
-    def _get_load_mode(self):
+    def _set_channel(self, value):
+        value = str(value).upper()  # TODO
+        if not self._driver_operation_simulate:
+            self._write(":CHAN '{value}'") 
+        self._channel = value
+    
+    def _get_mode(self):
         if not self._driver_operation_simulate:
             value = self._ask(":SOUR:MODE?").upper().strip('"')
             value = [k for k,v in LoadModeMapping.items() if v==value][0]
-            self._load_mode = value
-        return self._load_mode
+            self._channel_mode[self._channel] = value
+        return self._channel_mode[self._channel]
     
-    def _set_load_mode(self, value):
+    def _set_mode(self, value):
         if value in LoadModeMapping:
             if not self._driver_operation_simulate:
                 self._write(":SOUR:MODE '{LoadModeMapping[value]}'") 
-            self._load_mode = value
         else:
             raise ivi.ValueNotSupportedException()
+        self._channel_mode[self._channel] = value
     
-    def _get_range(self):
+    def _get_input_enabled(self):
         if not self._driver_operation_simulate:
-            func = self._get_measurement_function()
-            if func in MeasurementRangeMapping:
-                cmd = MeasurementRangeMapping[func]
-                value = float(self._ask("%s?" % (cmd)))
-                self._range = value
-        return self._range
-    
-    def _set_range(self, value):
-        value = float(value)
-        # round up to even power of 10
-        value = math.pow(10, math.ceil(math.log10(value)))
-        if not self._driver_operation_simulate:
-            func = self._get_measurement_function()
-            if func in MeasurementRangeMapping:
-                cmd = MeasurementRangeMapping[func]
-                self._write("%s %g" % (cmd, value))
-        self._range = value
+            value = self._ask(":INP?").upper().strip('"')
+            value = [k for k,v in LoadModeMapping.items() if v==value][0]
+            self._channel_mode[self._channel] = value
+        return self._channel_mode[self._channel]
     
     def _get_auto_range(self):
         if not self._driver_operation_simulate:
@@ -170,20 +170,6 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
                 self._auto_range = value
         return self._auto_range
 
-    def _get_channel_enabled(self, index):
-        index = ivi.get_index(self._channel_name, index)
-        if not self._driver_operation_simulate:
-            self._channel_enabled[index] = bool(int(
-                self._ask(f":{self._channel_name[index]}:inp?")))
-        return self._channel_enabled[index]
-
-    def _set_channel_enabled(self, index, value):
-        value = bool(value)
-        index = ivi.get_index(self._channel_name, index)
-        if not self._driver_operation_simulate:
-            self._write("inp %d" % (int(value)))
-        self._channel_enabled[index] = value
-    
     def _set_auto_range(self, value):
         if value not in load.Auto2:
             raise ivi.ValueNotSupportedException()

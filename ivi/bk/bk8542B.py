@@ -42,22 +42,23 @@ MeasurementAutoRangeMapping = {
         }
 '''
 class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
-    "B&K Precision 8542BA electronic load driver"
+    "B&K Precision 8542BA single-channel electronic load driver"
     
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', 'B&K Precision, 8542B')
-        
+
         super(bk8542B, self).__init__(*args, **kwargs)
         
-        self._memory_size = 5
+#       self._memory_size = 5
         
         self._identity_description = "B&K Precision 8542B electronic load driver"
-#       self._identity_identifier = ""
-#       self._identity_revision = ""
-#       self._identity_vendor = ""
         self._identity_instrument_manufacturer = "B&K Precision"
-#       self._identity_instrument_model = ""
-#       self._identity_instrument_firmware_revision = ""
-#       self._identity_specification_major_version = 4
-#       self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['8542B']
+
+    # This load only has one channel 
+    def _get_channel(self):
+        pass
+
+    def _set_channel(self, index):
+        pass
+
