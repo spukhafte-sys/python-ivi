@@ -31,11 +31,7 @@ from . import ivi
 class ChannelNotEnabledException(ivi.IviException): pass
 
 # Parameter Values
-#ApertureTimeUnits = set(['seconds', 'powerline_cycles'])
-Auto = set(['off', 'on', 'once'])
-Auto2 = set(['off', 'on'])
 LoadMode = set(['constant_current', 'constant_voltage', 'constant_resistance', 'constant_power',])
-Slope = set(['positive', 'negative'])
 
 class Base(ivi.IviContainer):
     "Base methods for electronic loads with multiple channels"

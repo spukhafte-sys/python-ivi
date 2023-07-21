@@ -51,20 +51,58 @@ class sunEC1X(ivi.Driver):
 
         self._add_property('identity.instrument_serial_number',
                 self._get_identity_instrument_serial_number)
-        self._add_property('cool_enabled', self._get_cool_enabled, self._set_cool_enabled)
-        self._add_property('heat_enabled', self._get_heat_enabled, self._set_heat_enabled)
-        self._add_property('chamber_temperature', self._get_temperature, )
-        self._add_property('chamber_temperature_setpoint',
-                self._get_temperature_setpoint, self._set_temperature_setpoint)
-        self._add_property('temperature_rate',
-                self._get_chamber_rate, self._set_chamber_rate)
-        self._add_property('user_temperature', self._get_user_temperature)
-        self._add_property('temperature_unit', self._get_temperature_unit)
-        self._add_property('upper_temperature_limit', self._get_upper_temperature_limit,
-                self._set_upper_temperature_limit)
-        self._add_property('lower_temperature_limit', self._get_lower_temperature_limit,
-                self._set_lower_temperature_limit)
-        self._add_property('hour_meter', self._get_hour_meter, )
+        self._add_property('temperature.cool.enabled',
+            self._get_cool_enabled,
+            self._set_cool_enabled,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_property('temperature.heat.enabled',
+            self._get_heat_enabled,
+            self._set_heat_enabled,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_method('temperature.measure',
+            self._get_temperature, )
+        self._add_property('temperature.setpoint',
+            self._get_temperature_setpoint,
+            self._set_temperature_setpoint,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_property('temperature.rate',
+            self._get_chamber_rate,
+            self._set_chamber_rate,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_method('temperature.user.measure',
+            self._get_user_temperature)
+        self._add_property('temperature.unit',
+            self._get_temperature_unit,
+            None,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_property('temperature.limit.upper',
+            self._get_upper_temperature_limit,
+            self._set_upper_temperature_limit,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_property('temperature.limit.lower',
+            self._get_lower_temperature_limit,
+            self._set_lower_temperature_limit,
+            None,
+            ivi.Doc("""
+            """))
+        self._add_property('hour_meter',
+            self._get_hour_meter,
+            None,
+            None,
+            ivi.Doc("""
+            """))
 
     def _initialize(self, resource=None, id_query=False, reset=False, **keywargs):
         "Opens an I/O session to the instrument."
