@@ -176,11 +176,11 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
                     f":INP:SHOR {1 if value else 0}")
         return self._channel_input_shorted[self._channel]
 
-    def _get_voltage(self):
+    def _get_voltage_constant(self):
         if not self._driver_operation_simulate:
             return float(self._ask(":VOLT?"))
 
-    def _set_voltage(self, value):
+    def _set_voltage_constant(self, value):
         if not self._driver_operation_simulate:
             if isinstance(value, str):
                 value = value.upper()
@@ -201,22 +201,6 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
                     self._write(f":VOLT:RANG {value}")
             else:
                 self._write(f":VOLT:RANG {float(value)}")
-
-#   def _get_voltage_range_auto(self):
-#       if not self._driver_operation_simulate:
-#           value = self._ask(":INP?").upper().strip('"')
-#           self._channel_input_enabled[self._channel] = bool(int(value))
-#       return self._channel_input_enabled[self._channel]
-
-#   def _set_voltage_range_auto(self, value):
-#       if value not in load.Auto2:
-#           raise ivi.ValueNotSupportedException()
-#       if not self._driver_operation_simulate:
-#           func = self._get_measurement_function()
-#           if func in MeasurementAutoRangeMapping:
-#               cmd = MeasurementAutoRangeMapping[func]
-#               self._write("%s %d" % (cmd, int(value == 'on')))
-#       self._auto_range = value
 
     def _get_voltage_on(self):
         if not self._driver_operation_simulate:
@@ -244,18 +228,18 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
             else:
                 self._write(f":VOLT:OFF {float(value)}")
 
-    def _get_current(self):
+    def _get_current_constant(self):
         if not self._driver_operation_simulate:
-            return float(self._ask(":VOLT?"))
+            return float(self._ask(":CURR?"))
 
-    def _set_current(self, value):
+    def _set_current_constant(self, value):
         if not self._driver_operation_simulate:
             if isinstance(value, str):
                 value = value.upper()
                 if value == 'MIN' or value == 'MAX':
-                    self._write(f":VOLT {value}")
+                    self._write(f":CURR {value}")
             else:
-                self._write(f":VOLT {float(value)}")
+                self._write(f":CURR {float(value)}")
 
     def _get_current_range(self):
         if not self._driver_operation_simulate:
@@ -266,7 +250,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
             if isinstance(value, str):
                 value = value.upper()
                 if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR:RANG {value}")
+                    self._write(f":CURR:RANG {value}") # TODO throw exception on bad value
             else:
                 self._write(f":CURR:RANG {float(value)}")
 
@@ -322,11 +306,11 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
             else:
                 self._write(f":CURR:PROT {float(value)}")
 
-    def _get_power(self):
+    def _get_power_constant(self):
         if not self._driver_operation_simulate:
             return float(self._ask(":POW?"))
 
-    def _set_power(self, value):
+    def _set_power_constant(self, value):
         if not self._driver_operation_simulate:
             if isinstance(value, str):
                 value = value.upper()
@@ -348,11 +332,12 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
             else:
                 self._write(f":POW:PROT {float(value)}")
 
-    def _get_resistance(self):
+    def _get_resistance_constant(self):
         if not self._driver_operation_simulate:
-            return float(self._ask(":POW?"))
+            value = self._ask(":RES?")
+            return float('inf' if value.endswith('INF0') else value)
 
-    def _set_resistance(self, value):
+    def _set_resistance_constant(self, value):
         if not self._driver_operation_simulate:
             if isinstance(value, str):
                 value = value.upper()
@@ -400,5 +385,6 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
 
     def _measure_resistance(self):
         if not self._driver_operation_simulate:
-            return float(self._ask(":MEAS:RES?"))
+            value = self._ask(":MEAS:RES?")  # TODO deal with infinite
+            return float('inf' if value.endswith('INF0') else value)
 

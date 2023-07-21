@@ -53,19 +53,19 @@ class Base(ivi.IviContainer):
         self._channel_mode = []
         self._channel_input_enabled = []
         self._channel_input_shorted = []
-        self._channel_voltage = []
+        self._channel_voltage_constant = []
         self._channel_voltage_range = []
         self._channel_voltage_on = []
         self._channel_voltage_off = []
-        self._channel_current = []
+        self._channel_current_constant = []
         self._channel_current_range = []
         self._channel_current_slew = []
         self._channel_current_slew_rise = []
         self._channel_current_slew_fall = []
         self._channel_current_protection = []
-        self._channel_power = []
+        self._channel_power_constant = []
         self._channel_power_protection = []
-        self._channel_resistance = []
+        self._channel_resistance_constant = []
 
         # Properties
         self._add_property('channel',
@@ -90,6 +90,7 @@ class Base(ivi.IviContainer):
             a SelectorRangeException.
             """, cls, grp, 'N/A'))
         self._add_property('channels[].name',  # Demo multiple addressable channels
+            # Use this as a template to add support for multi-channel instruments
             self._get_channel_name,
             self._set_channel_name,
             None,
@@ -124,6 +125,13 @@ class Base(ivi.IviContainer):
             ivi.Doc("""
             Input is shorted.
             """))
+        self._add_property('voltage.constant',
+            self._get_voltage_constant,
+            self._set_voltage_constant,
+            None,
+            ivi.Doc("""
+            Set range given a maximum voltage.
+            """))
         self._add_property('voltage.range',
             self._get_voltage_range,
             self._set_voltage_range,
@@ -145,9 +153,9 @@ class Base(ivi.IviContainer):
             ivi.Doc("""
             Disable load at or below this voltage.
             """))
-        self._add_property('current.setpoint',
-            self._get_current,
-            self._set_current,
+        self._add_property('current.constant',
+            self._get_current_constant,
+            self._set_current_constant,
             None,
             ivi.Doc("""
             Set range given a maximum current.
@@ -160,15 +168,15 @@ class Base(ivi.IviContainer):
             Set range given a maximum current.
             """))
         self._add_property('current.slew',
-            self._get_voltage_off,
-            self._set_voltage_off,
+            self._get_current_slew,
+            self._set_current_slew,
             None,
             ivi.Doc("""
             Disable load at or below this voltage.
             """))
         self._add_property('current.slew_rise',
-            self._get_current_slew,
-            self._set_current_slew,
+            self._get_current_slew_rise,
+            self._set_current_slew_rise,
             None,
             ivi.Doc("""
             Disable load at or below this voltage.
@@ -187,9 +195,9 @@ class Base(ivi.IviContainer):
             ivi.Doc("""
             Disable load at or below this current.
             """))
-        self._add_property('power.setpoint',
-            self._get_power,
-            self._set_power,
+        self._add_property('power.constant',
+            self._get_power_constant,
+            self._set_power_constant,
             None,
             ivi.Doc("""
             Disable load at or below this voltage.
@@ -201,61 +209,61 @@ class Base(ivi.IviContainer):
             ivi.Doc("""
             Disable load at or below this voltage.
             """))
-        self._add_property('resistance',
-            self._get_resistance,
-            self._set_resistance,
+        self._add_property('resistance.constant',
+            self._get_resistance_constant,
+            self._set_resistance_constant,
             None,
             ivi.Doc("""
             Disable load at or below this voltage.
             """))
 
         # Methods
-        self.voltage._add_method('measure',
+        self._add_method('voltage.measure',
             self._measure_voltage,
             ivi.Doc("""
             Measure and return voltage across load.
             """))
-        self._add_method('measure.min.voltage',
+        self._add_method('voltage.min.measure',
             self._measure_min_voltage,
             ivi.Doc("""
             Measure and return minimum voltage across load.
             """))
-        self._add_method('measure.max.voltage',
+        self._add_method('voltage.max.measure',
             self._measure_max_voltage,
             ivi.Doc("""
             Measure and return maximum voltage across load.
             """))
-        self._add_method('measure.ptp.voltage',
+        self._add_method('voltage.ptp.measure',
             self._measure_ptp_voltage,
             ivi.Doc("""
             Measure and return peak-to-peak ripple voltage across load.
             """))
-        self._add_method('measure.current',
+        self._add_method('current.measure',
             self._measure_current,
             ivi.Doc("""
             Measure and return current across load.
             """))
-        self._add_method('measure.min.current',
+        self._add_method('current.min.measure',
             self._measure_min_current,
             ivi.Doc("""
             Measure and return minimum current across load.
             """))
-        self._add_method('measure.max.current',
+        self._add_method('current.max.measure',
             self._measure_max_current,
             ivi.Doc("""
             Measure and return maximum current across load.
             """))
-        self._add_method('measure.ptp.current',
+        self._add_method('current.ptp.measure',
             self._measure_ptp_current,
             ivi.Doc("""
             Measure and return peak-to-peak ripple current across load.
             """))
-        self._add_method('measure.power',
+        self._add_method('power.measure',
             self._measure_power,
             ivi.Doc("""
             Measure and return peak-to-peak ripple current across load.
             """))
-        self._add_method('measure.resistance',
+        self._add_method('resistance.measure',
             self._measure_resistance,
             ivi.Doc("""
             Measure and return peak-to-peak ripple current across load.
@@ -274,19 +282,19 @@ class Base(ivi.IviContainer):
             self._channel_mode.append('constant_current')
             self._channel_input_enabled.append(False)
             self._channel_input_shorted.append(False)
-            self._channel_voltage.append(0)
+            self._channel_voltage_constant.append(0)
             self._channel_voltage_range.append(0)
             self._channel_voltage_on.append(0.1)
             self._channel_voltage_off.append(0)
-            self._channel_current.append(0)
+            self._channel_current_constant.append(0)
             self._channel_current_range.append(0)
             self._channel_current_slew.append(0)
             self._channel_current_slew_rise.append(0)
             self._channel_current_slew_fall.append(0)
             self._channel_current_protection.append(0)
-            self._channel_power.append(0)
+            self._channel_power_constant.append(0)
             self._channel_power_protection.append(0)
-            self._channel_resistance.append(None)
+            self._channel_resistance_constant.append(None)
 
         self.channels._set_list(self._channel_name)
 
@@ -334,23 +342,17 @@ class Base(ivi.IviContainer):
     def _set_input_shorted(self, value):
         self._channel_input_shorted[self._channel] = bool(value)
 
-    def _get_voltage(self):
-        return self._channel_voltage[self._channel]
+    def _get_voltage_constant(self):
+        return self._channel_voltage_constant[self._channel]
 
-    def _set_voltage_range(self, value):
-        self._channel_voltage[self._channel] = float(value)
+    def _set_voltage_constant(self, value):
+        self._channel_voltage_constant[self._channel] = float(value)
 
     def _get_voltage_range(self):
         return self._channel_voltage_range[self._channel]
 
     def _set_voltage_range(self, value):
         self._channel_voltage_range[self._channel] = float(value)
-
-    def _get_voltage_range_auto(self):
-        return self._channel_voltage_auto[self._channel]
-
-    def _set_voltage_range_auto(self, value):
-        self._channel_voltage_auto[self._channel] = bool(value)
 
     def _get_voltage_on(self):
         return self._channel_voltage_on[self._channel]
@@ -364,11 +366,11 @@ class Base(ivi.IviContainer):
     def _set_voltage_off(self, value):
         self._channel_voltage_off[self._channel] = float(value)
 
-    def _get_current(self):
-        return self._channel_current[self._channel]
+    def _get_current_constant(self):
+        return self._channel_current_constant[self._channel]
 
-    def _set_current(self, value):
-        self._channel_current[self._channel] = float(value)
+    def _set_current_constant(self, value):
+        self._channel_current_constant[self._channel] = float(value)
 
     def _get_current_range(self):
         return self._channel_current_range[self._channel]
@@ -406,10 +408,10 @@ class Base(ivi.IviContainer):
     def _set_power_protection(self, value):
         self._channel_power_protection[self._channel] = float(value)
 
-    def _get_resistance(self):
+    def _get_resistance_constant(self):
         return self._channel_resistance[self._channel]
 
-    def _set_resistance(self, value):
+    def _set_resistance_constant(self, value):
         self._channel_resistance[self._channel] = float(value)
 
     # Measurement functions
