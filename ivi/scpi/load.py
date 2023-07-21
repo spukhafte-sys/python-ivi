@@ -56,22 +56,22 @@ TriggerSourceMapping = {
         'external': 'EXT',
         'immediate': 'IMM'}
 
-class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
-           load.Base,
-           ivi.Driver,
-           ):
+class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
+        common.SelfTest, common.Memory,
+        load.Base, ivi.Driver,
+        ):
     "Generic SCPI electronic load driver"
-    
+
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', '')
-        
+
         # early define of _do_scpi_init
         self.__dict__.setdefault('_do_scpi_init', True)
-        
+
         super(Base, self).__init__(*args, **kwargs)
 
         self._self_test_delay = 40
-        
+
         self._identity_description = "Generic SCPI electronic load driver"
         self._identity_identifier = ""
         self._identity_revision = ""
@@ -82,16 +82,16 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['LOAD']
-    
+
     def _initialize(self, resource = None, id_query = False, reset = False, **kwargs):
         "Opens an I/O session to the instrument."
-        
+
         super(Base, self)._initialize(resource, id_query, reset, **kwargs)
-        
+
         # interface clear
         if not self._driver_operation_simulate:
             self._clear()
-        
+
         # check ID
         if id_query and not self._driver_operation_simulate:
             id = self.identity.instrument_model
@@ -99,17 +99,17 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
             id_short = id[:len(id_check)]
             if id_short != id_check:
                 raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
-        
+
         # reset
         if reset:
             self.utility.reset()
 
     def _utility_disable(self):
         pass
-    
+
     def _utility_lock_object(self):
         pass
-    
+
     def _utility_unlock_object(self):
         pass
 
@@ -122,134 +122,283 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
     def _local(self):
         self._wirte('SYST:LOC')
 
-    def _get_channel(self):
+    def _get_channel(self):  # TODO Untested
         if not self._driver_operation_simulate:
             value = self._ask(":CHAN?").upper().strip()
             if value in ChannelNameMapping:
                 self._channel = int(ChannelNameMapping[value])
         return self._channel
-    
-    def _set_channel(self, value):
-        value = str(value).upper()  # TODO
+
+    def _set_channel(self, value):  # TODO Untested
+        value = str(value).upper()
         if not self._driver_operation_simulate:
-            self._write(":CHAN '{value}'") 
+            self._write(":CHAN '{value}'")
         self._channel = value
-    
+
+    # Base class handles channel name
+
     def _get_mode(self):
         if not self._driver_operation_simulate:
             value = self._ask(":SOUR:MODE?").upper().strip('"')
             value = [k for k,v in LoadModeMapping.items() if v==value][0]
             self._channel_mode[self._channel] = value
         return self._channel_mode[self._channel]
-    
+
     def _set_mode(self, value):
         if value in LoadModeMapping:
             if not self._driver_operation_simulate:
-                self._write(":SOUR:MODE '{LoadModeMapping[value]}'") 
+                self._write(":SOUR:MODE '{LoadModeMapping[value]}'")
         else:
             raise ivi.ValueNotSupportedException()
         self._channel_mode[self._channel] = value
-    
+
     def _get_input_enabled(self):
         if not self._driver_operation_simulate:
             value = self._ask(":INP?").upper().strip('"')
-            value = [k for k,v in LoadModeMapping.items() if v==value][0]
-            self._channel_mode[self._channel] = value
-        return self._channel_mode[self._channel]
-    
-    def _get_auto_range(self):
-        if not self._driver_operation_simulate:
-            func = self._get_measurement_function()
-            if func in MeasurementAutoRangeMapping:
-                cmd = MeasurementAutoRangeMapping[func]
-                value = int(self._ask("%s?" % (cmd)))
-                if value == 0:
-                    value = 'off'
-                elif value == 1:
-                    value = 'on'
-                self._auto_range = value
-        return self._auto_range
+            self._channel_input_enabled[self._channel] = bool(int(value))
+        return self._channel_input_enabled[self._channel]
 
-    def _set_auto_range(self, value):
-        if value not in load.Auto2:
-            raise ivi.ValueNotSupportedException()
+    def _set_input_enabled(self, value):
         if not self._driver_operation_simulate:
-            func = self._get_measurement_function()
-            if func in MeasurementAutoRangeMapping:
-                cmd = MeasurementAutoRangeMapping[func]
-                self._write("%s %d" % (cmd, int(value == 'on')))
-        self._auto_range = value
-    
-    def _get_trigger_delay(self):
+            self._channel_input_enabled[self._channel] = self._write(
+                    f":INP {1 if value else 0}")
+        return self._channel_input_enabled[self._channel]
+
+    def _get_input_shorted(self):
         if not self._driver_operation_simulate:
-            value = float(self._ask("trigger:delay?"))
-            self._trigger_delay = value
-        return self._trigger_delay
-    
-    def _set_trigger_delay(self, value):
-        value = float(value)
+            value = self._ask(":INP:SHOR?").upper().strip('"')
+            self._channel_input_shorted[self._channel] = bool(int(value))
+        return self._channel_input_shorted[self._channel]
+
+    def _set_input_shorted(self, value):
         if not self._driver_operation_simulate:
-            self._write('trigger:delay %g' % value)
-        self._trigger_delay = value
-    
-    def _get_trigger_delay_auto(self):
+            self._channel_input_shorted[self._channel] = self._write(
+                    f":INP:SHOR {1 if value else 0}")
+        return self._channel_input_shorted[self._channel]
+
+    def _get_voltage(self):
         if not self._driver_operation_simulate:
-            value = bool(int(self._ask("trigger:delay:auto?")))
-            self._trigger_delay_auto = value
-        return self._trigger_delay_auto
-    
-    def _set_trigger_delay_auto(self, value):
-        value = bool(value)
+            return float(self._ask(":VOLT?"))
+
+    def _set_voltage(self, value):
         if not self._driver_operation_simulate:
-            self._write('trigger:delay:auto %d' % int(value))
-        self._trigger_delay_auto = value
-    
-    def _get_trigger_source(self):
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":VOLT {value}")
+            else:
+                self._write(f":VOLT {float(value)}")
+
+    def _get_voltage_range(self):
         if not self._driver_operation_simulate:
-            value = self._ask("trigger:source?").upper()
-            value = [k for k,v in TriggerSourceMapping.items() if v==value][0]
-            self._trigger_source = value
-        return self._trigger_source
-    
-    def _set_trigger_source(self, value):
-        if value not in TriggerSourceMapping:
-            raise ivi.ValueNotSupportedException()
+            return float(self._ask(":VOLT:RANG?"))
+
+    def _set_voltage_range(self, value):
         if not self._driver_operation_simulate:
-            self._write(":trigger:source %s" % TriggerSourceMapping[value])
-        self._trigger_source = value
-    
-    def _measurement_abort(self):
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":VOLT:RANG {value}")
+            else:
+                self._write(f":VOLT:RANG {float(value)}")
+
+#   def _get_voltage_range_auto(self):
+#       if not self._driver_operation_simulate:
+#           value = self._ask(":INP?").upper().strip('"')
+#           self._channel_input_enabled[self._channel] = bool(int(value))
+#       return self._channel_input_enabled[self._channel]
+
+#   def _set_voltage_range_auto(self, value):
+#       if value not in load.Auto2:
+#           raise ivi.ValueNotSupportedException()
+#       if not self._driver_operation_simulate:
+#           func = self._get_measurement_function()
+#           if func in MeasurementAutoRangeMapping:
+#               cmd = MeasurementAutoRangeMapping[func]
+#               self._write("%s %d" % (cmd, int(value == 'on')))
+#       self._auto_range = value
+
+    def _get_voltage_on(self):
         if not self._driver_operation_simulate:
-            self._write(":abort")
-    
-    def _measurement_fetch(self, max_time):
+            return float(self._ask(":VOLT:ON?"))
+
+    def _set_voltage_on(self, value):
         if not self._driver_operation_simulate:
-            return float(self._ask(":fetch?"))
-        return 0.0
-    
-    def _measurement_initiate(self):
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":VOLT:ON {value}")
+            else:
+                self._write(f":VOLT:ON {float(value)}")
+
+    def _get_voltage_off(self):
         if not self._driver_operation_simulate:
-            self._write(":initiate")
-    
-    def _measurement_is_out_of_range(self, value):
-        return self._measurement_is_over_range(value) or self._measurement_is_under_range(value)
-    
-    def _measurement_is_over_range(self, value):
-        return value == 9.9e+37
-    
-    def _measurement_is_under_range(self, value):
-        return value == -9.9e+37
-    
-    def _measurement_read(self, max_time):
+            return float(self._ask(":VOLT:OFF?"))
+
+    def _set_voltage_off(self, value):
         if not self._driver_operation_simulate:
-            return float(self._ask(":read?"))
-        return 0.0
-    
-class SoftwareTrigger(load.SoftwareTrigger):
-    """Extension methods for electronic loads that can initiate a measurement
-    based on a software trigger signal"""
-    
-    def _send_software_trigger(self):
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":VOLT:OFF {value}")
+            else:
+                self._write(f":VOLT:OFF {float(value)}")
+
+    def _get_current(self):
         if not self._driver_operation_simulate:
-            self._write("*trg")
+            return float(self._ask(":VOLT?"))
+
+    def _set_current(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":VOLT {value}")
+            else:
+                self._write(f":VOLT {float(value)}")
+
+    def _get_current_range(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":CURR:RANG?"))
+
+    def _set_current_range(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":CURR:RANG {value}")
+            else:
+                self._write(f":CURR:RANG {float(value)}")
+
+    def _get_current_slew(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":CURR:SLEW?"))
+
+    def _set_current_slew(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":CURR:SLEW {value}")
+            else:
+                self._write(f":CURR:SLEW {float(value)}")
+
+    def _get_current_slew_rise(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":CURR:SLEW:RISE?"))
+
+    def _set_current_slew_rise(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":CURR:SLEW:RISE {value}")
+            else:
+                self._write(f":CURR:SLEW:RISE {float(value)}")
+
+    def _get_current_slew_fall(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":CURR:SLEW:FALL?"))
+
+    def _set_current_slew_fall(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":CURR:SLEW:FALL {value}")
+            else:
+                self._write(f":CURR:SLEW:FALL {float(value)}")
+
+    def _get_current_protection(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":CURR:PROT?"))
+
+    def _set_current_protection(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":CURR:PROT {value}")
+            else:
+                self._write(f":CURR:PROT {float(value)}")
+
+    def _get_power(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":POW?"))
+
+    def _set_power(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":POW {value}")
+            else:
+                self._write(f":POW {float(value)}")
+
+    def _get_power_protection(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":POW:PROT?"))
+
+    def _set_power_protection(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":POW:PROT {value}")
+            else:
+                self._write(f":POW:PROT {float(value)}")
+
+    def _get_resistance(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":POW?"))
+
+    def _set_resistance(self, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":RES {value}")
+            else:
+                self._write(f":RES {float(value)}")
+
+    # Measurement functions
+    def _measure_voltage(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:VOLT?"))
+
+    def _measure_min_voltage(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:VOLT:MIN?"))
+
+    def _measure_max_voltage(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:VOLT:MAX?"))
+
+    def _measure_ptp_voltage(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:VOLT:PTP?"))
+
+    def _measure_current(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:CURR?"))
+
+    def _measure_min_current(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:CURR:MIN?"))
+
+    def _measure_max_current(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:CURR:MAX?"))
+
+    def _measure_ptp_current(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:CURR:PTP?"))
+
+    def _measure_power(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:POW?"))
+
+    def _measure_resistance(self):
+        if not self._driver_operation_simulate:
+            return float(self._ask(":MEAS:RES?"))
 

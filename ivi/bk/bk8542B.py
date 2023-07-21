@@ -41,7 +41,7 @@ MeasurementAutoRangeMapping = {
         'dc_current': 'curr:dc:range:auto',
         }
 '''
-class bk8542B(scpi.load.Base, scpi.load.SoftwareTrigger):
+class bk8542B(scpi.load.Base):
     "B&K Precision 8542BA single-channel electronic load driver"
     
     def __init__(self, *args, **kwargs):
