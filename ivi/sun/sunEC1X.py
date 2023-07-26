@@ -51,13 +51,13 @@ class sunEC1X(ivi.Driver):
 
         self._add_property('identity.instrument_serial_number',
                 self._get_identity_instrument_serial_number)
-        self._add_property('temperature.cool.enabled',
+        self._add_property('cool.enabled',
             self._get_cool_enabled,
             self._set_cool_enabled,
             None,
             ivi.Doc("""
             """))
-        self._add_property('temperature.heat.enabled',
+        self._add_property('heat.enabled',
             self._get_heat_enabled,
             self._set_heat_enabled,
             None,

@@ -83,7 +83,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['LOAD']
 
-    def _initialize(self, resource = None, id_query = False, reset = False, **kwargs):
+    def _initialize(self, resource=None, id_query=False, reset=False, **kwargs):
         "Opens an I/O session to the instrument."
 
         super(Base, self)._initialize(resource, id_query, reset, **kwargs)
@@ -91,6 +91,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         # interface clear
         if not self._driver_operation_simulate:
             self._clear()
+            self._remote()
 
         # check ID
         if id_query and not self._driver_operation_simulate:
@@ -120,7 +121,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         self._write('SYST:REM')
 
     def _local(self):
-        self._wirte('SYST:LOC')
+        self._write('SYST:LOC')
 
     def _get_channel(self):  # TODO Untested
         if not self._driver_operation_simulate:
@@ -147,7 +148,7 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
     def _set_mode(self, value):
         if value in LoadModeMapping:
             if not self._driver_operation_simulate:
-                self._write(":SOUR:MODE '{LoadModeMapping[value]}'")
+                self._write(f':SOUR:MODE {LoadModeMapping[value]}')
         else:
             raise ivi.ValueNotSupportedException()
         self._channel_mode[self._channel] = value

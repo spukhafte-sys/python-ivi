@@ -3,6 +3,7 @@
 Python Interchangeable Virtual Instrument Library
 
 Copyright (c) 2012-2017 Alex Forencich
+Copyright (c) 2023 Fred Fierling
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +29,6 @@ import time
 import struct
 
 from .. import ivi
-#from .. import load
 from .. import scpi
 '''
 MeasurementRangeMapping = {
@@ -48,8 +48,6 @@ class bk8542B(scpi.load.Base):
         self.__dict__.setdefault('_instrument_id', 'B&K Precision, 8542B')
 
         super(bk8542B, self).__init__(*args, **kwargs)
-        
-#       self._memory_size = 5
         
         self._identity_description = "B&K Precision 8542B electronic load driver"
         self._identity_instrument_manufacturer = "B&K Precision"
