@@ -56,9 +56,9 @@ class agilentBase8590A(agilentBase8590):
 
         # rescale to get white background
         # presuming background of (90, 88, 85)
-        img[:,:,0] *= 255/90
-        img[:,:,1] *= 255/88
-        img[:,:,2] *= 255/85
+        img[:,:,0] = (img[:,:,0] * 255/90).astype(np.uint8)
+        img[:,:,1] = (img[:,:,1] * 255/88).astype(np.uint8)
+        img[:,:,2] = (img[:,:,2] * 255/85).astype(np.uint8)
 
         bmp = hprtl.generate_bmp(img)
 
