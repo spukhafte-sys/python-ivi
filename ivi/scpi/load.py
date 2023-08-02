@@ -56,6 +56,22 @@ TriggerSourceMapping = {
         'external': 'EXT',
         'immediate': 'IMM'}
 
+_INPUT = 'INP'
+_INPUT_SHORT = 'INP:SHOR'
+_V_CONSTANT = 'VOLT'
+_V_RANGE = 'VOLT:RANG'
+_V_ON = 'VOLT:ON'
+_V_OFF = 'VOLT:OFF'
+_I_CONSTANT = 'CURR'
+_I_RANGE = 'CURR:RANG'
+_I_SLEW = 'CURR:SLEW'
+_I_SLEW_RISE = 'CURR:SLEW:RISE'
+_I_SLEW_FALL = 'CURR:SLEW:FALL'
+_I_PROTECTION = 'CURR:PROT'
+_P_CONSTANT = 'POW'
+_P_PROTECTION = 'POW:PROT'
+_R_CONSTANT = 'RES'
+
 class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         common.SelfTest, common.Memory,
         load.Base, ivi.Driver,
@@ -123,6 +139,29 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
     def _local(self):
         self._write('SYST:LOC')
 
+    # Helper functions
+    def _get_bool(self, cmd):
+        if not self._driver_operation_simulate:
+            return bool(int(self._ask(f":{cmd}?").upper().strip('"')))
+
+    def _set_bool(self, cmd, value):
+        if not self._driver_operation_simulate:
+            self._write(f":{cmd} {1 if value else 0}")
+
+    def _get_scalar(self, cmd):
+        if not self._driver_operation_simulate:
+            if field in ScalarMapping:
+                return float(self._ask(f":{cmd}?"))
+
+    def _set_scalar(self, cmd, value):
+        if not self._driver_operation_simulate:
+            if isinstance(value, str):
+                value = value.upper()
+                if value == 'MIN' or value == 'MAX':
+                    self._write(f":{cmd} {value}")
+            else:
+                self._write(f":{cmd} {float(value)}")
+
     def _get_channel(self):  # TODO Untested
         if not self._driver_operation_simulate:
             value = self._ask(":CHAN?").upper().strip()
@@ -166,42 +205,22 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         return self._channel_input_enabled[self._channel]
 
     def _get_input_shorted(self):
-        if not self._driver_operation_simulate:
-            value = self._ask(":INP:SHOR?").upper().strip('"')
-            self._channel_input_shorted[self._channel] = bool(int(value))
-        return self._channel_input_shorted[self._channel]
+        return _get_bool(_INPUT_SHORT)
 
     def _set_input_shorted(self, value):
-        if not self._driver_operation_simulate:
-            self._channel_input_shorted[self._channel] = self._write(
-                    f":INP:SHOR {1 if value else 0}")
-        return self._channel_input_shorted[self._channel]
+        return _set_bool(_INPUT_SHORT, value)
 
     def _get_voltage_constant(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":VOLT?"))
+        return _get_scalar(_V_CONSTANT)
 
     def _set_voltage_constant(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":VOLT {value}")
-            else:
-                self._write(f":VOLT {float(value)}")
+        return _set_scalar(_V_CONSTANT, value)
 
     def _get_voltage_range(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":VOLT:RANG?"))
+        return _get_scalar(_V_RANGE)
 
     def _set_voltage_range(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":VOLT:RANG {value}")
-            else:
-                self._write(f":VOLT:RANG {float(value)}")
+        return _set_scalar(_V_RANGE, value)
 
     def _get_voltage_on(self):
         if not self._driver_operation_simulate:

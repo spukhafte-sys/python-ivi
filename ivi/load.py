@@ -69,17 +69,15 @@ class Base(ivi.IviContainer):
             self._set_channel,
             None,
             ivi.Doc("""
-            Selects channel on loads with multiple channels.
+            Selects the current channel on instruments with multiple channels.
             """))
         self._add_property('name',
             self._get_name,
             self._set_name,
             None,
             ivi.Doc("""
-            This attribute returns the repeated capability identifier defined by
-            specific driver for the channel that corresponds to the index that the
-            user specifies. If the driver defines a qualified channel name, this
-            property returns the qualified name.
+            This attribute is the name of the currently selected channel.
+            The index can be the channel's numeric index or name.
 
             If the value that the user passes for the Index parameter is less than
             zero or greater than the value of the channel count, the attribute raises
@@ -91,10 +89,8 @@ class Base(ivi.IviContainer):
             self._set_channel_name,
             None,
             ivi.Doc("""
-            This attribute returns the repeated capability identifier defined by
-            specific driver for the channel that corresponds to the index that the
-            user specifies. If the driver defines a qualified channel name, this
-            property returns the qualified name.
+            This attribute is the name associated with the channel at the specified index.
+            The index can be the channel's numeric index or name.
 
             If the value that the user passes for the Index parameter is less than
             zero or greater than the value of the channel count, the attribute raises
@@ -112,105 +108,107 @@ class Base(ivi.IviContainer):
             self._set_input_enabled,
             None,
             ivi.Doc("""
-            Input state.
+            If True, the input is enabled.
             """))
         self._add_property('input.shorted',
             self._get_input_shorted,
             self._set_input_shorted,
             None,
             ivi.Doc("""
-            Input is shorted.
+            If True, the input is shorted.
             """))
         self._add_property('voltage.constant',
             self._get_voltage_constant,
             self._set_voltage_constant,
             None,
             ivi.Doc("""
-            Set range given a maximum voltage.
+            Load voltage in constant voltage mode. (V)
             """))
         self._add_property('voltage.range',
             self._get_voltage_range,
             self._set_voltage_range,
             None,
             ivi.Doc("""
-            Set range given a maximum voltage.
+            Maximum voltage for voltage range. (V)
             """))
         self._add_property('voltage.on',
             self._get_voltage_on,
             self._set_voltage_on,
             None,
             ivi.Doc("""
-            Enable load at or above this voltage.
+            Enable load at or above this voltage. (V)
             """))
         self._add_property('voltage.off',
             self._get_voltage_off,
             self._set_voltage_off,
             None,
             ivi.Doc("""
-            Disable load at or below this voltage.
+            Disable load at or below this voltage. (V)
             """))
         self._add_property('current.constant',
             self._get_current_constant,
             self._set_current_constant,
             None,
             ivi.Doc("""
-            Set range given a maximum current.
+            Load current in constant current mode. (A)
             """))
         self._add_property('current.range',
             self._get_current_range,
             self._set_current_range,
             None,
             ivi.Doc("""
-            Set range given a maximum current.
+            Maximum current for current range. (A)
             """))
         self._add_property('current.slew',
             self._get_current_slew,
             self._set_current_slew,
             None,
             ivi.Doc("""
-            Disable load at or below this voltage.
+            Rate at which current changes in response programmed current changes. (A/us)
+
+            Sets rise and fall slew rate in instrument.
             """))
         self._add_property('current.slew_rise',
             self._get_current_slew_rise,
             self._set_current_slew_rise,
             None,
             ivi.Doc("""
-            Disable load at or below this voltage.
+            Rate at which current decreases in response programmed current changes. (A/µs)
             """))
         self._add_property('current.slew_fall',
             self._get_current_slew_fall,
             self._set_current_slew_fall,
             None,
             ivi.Doc("""
-            Disable load at or below this current.
+            Rate at which current increases in response programmed current changes. (A/µs)
             """))
         self._add_property('current.protection',
             self._get_current_protection,
             self._set_current_protection,
             None,
             ivi.Doc("""
-            Disable load at or below this current.
+            Disable load at or below this current. (A)
             """))
         self._add_property('power.constant',
             self._get_power_constant,
             self._set_power_constant,
             None,
             ivi.Doc("""
-            Disable load at or below this voltage.
+            Load power for constant power mode. (W)
             """))
         self._add_property('power.protection',
             self._get_power_protection,
             self._set_power_protection,
             None,
             ivi.Doc("""
-            Disable load at or below this voltage.
+            Disable load at or below this power. (W)
             """))
         self._add_property('resistance.constant',
             self._get_resistance_constant,
             self._set_resistance_constant,
             None,
             ivi.Doc("""
-            Disable load at or below this voltage.
+            Load resistance in constant resistance mode. (Ω)
             """))
 
         # Methods
@@ -237,32 +235,34 @@ class Base(ivi.IviContainer):
         self._add_method('current.measure',
             self._measure_current,
             ivi.Doc("""
-            Measure and return current across load.
+            Measure and return current through load.
             """))
         self._add_method('current.min.measure',
             self._measure_min_current,
             ivi.Doc("""
-            Measure and return minimum current across load.
+            Measure and return minimum current through load.
             """))
         self._add_method('current.max.measure',
             self._measure_max_current,
             ivi.Doc("""
-            Measure and return maximum current across load.
+            Measure and return maximum current through load.
             """))
         self._add_method('current.ptp.measure',
             self._measure_ptp_current,
             ivi.Doc("""
-            Measure and return peak-to-peak ripple current across load.
+            Measure and return peak-to-peak ripple current through load.
             """))
         self._add_method('power.measure',
             self._measure_power,
             ivi.Doc("""
-            Measure and return peak-to-peak ripple current across load.
+            Measure and return power dissipated by load.
             """))
         self._add_method('resistance.measure',
             self._measure_resistance,
             ivi.Doc("""
-            Measure and return peak-to-peak ripple current across load.
+            Compute and return load resistance.
+
+            Can return infinity.
             """))
 
         self._init_channels()
