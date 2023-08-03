@@ -148,12 +148,13 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         if not self._driver_operation_simulate:
             self._write(f":{cmd} {1 if value else 0}")
 
-    def _get_scalar(self, cmd):
+    def _get_value(self, cmd):
         if not self._driver_operation_simulate:
-            if field in ScalarMapping:
-                return float(self._ask(f":{cmd}?"))
+            return float(self._ask(f":{cmd}?"))
+#           resp = self._ask(f":{cmd}?")
+#           return float('inf' if resp.endswith('INF0') else resp)
 
-    def _set_scalar(self, cmd, value):
+    def _set_value(self, cmd, value):
         if not self._driver_operation_simulate:
             if isinstance(value, str):
                 value = value.upper()
@@ -193,178 +194,95 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
         self._channel_mode[self._channel] = value
 
     def _get_input_enabled(self):
-        if not self._driver_operation_simulate:
-            value = self._ask(":INP?").upper().strip('"')
-            self._channel_input_enabled[self._channel] = bool(int(value))
-        return self._channel_input_enabled[self._channel]
+        return self._get_bool(_INPUT)
 
     def _set_input_enabled(self, value):
-        if not self._driver_operation_simulate:
-            self._channel_input_enabled[self._channel] = self._write(
-                    f":INP {1 if value else 0}")
-        return self._channel_input_enabled[self._channel]
+        return self._set_bool(_INPUT, value)
 
     def _get_input_shorted(self):
-        return _get_bool(_INPUT_SHORT)
+        return self._get_bool(_INPUT_SHORT)
 
     def _set_input_shorted(self, value):
-        return _set_bool(_INPUT_SHORT, value)
+        return self._set_bool(_INPUT_SHORT, value)
 
     def _get_voltage_constant(self):
-        return _get_scalar(_V_CONSTANT)
+        return self._get_value(_V_CONSTANT)
 
     def _set_voltage_constant(self, value):
-        return _set_scalar(_V_CONSTANT, value)
+        return self._set_value(_V_CONSTANT, value)
 
     def _get_voltage_range(self):
-        return _get_scalar(_V_RANGE)
+        return self._get_value(_V_RANGE)
 
     def _set_voltage_range(self, value):
-        return _set_scalar(_V_RANGE, value)
+        return self._set_value(_V_RANGE, value)
 
     def _get_voltage_on(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":VOLT:ON?"))
+        return self._get_value(_V_ON)
 
     def _set_voltage_on(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":VOLT:ON {value}")
-            else:
-                self._write(f":VOLT:ON {float(value)}")
+        return self._set_value(_V_ON, value)
 
     def _get_voltage_off(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":VOLT:OFF?"))
+        return self._get_value(_V_OFF)
 
     def _set_voltage_off(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":VOLT:OFF {value}")
-            else:
-                self._write(f":VOLT:OFF {float(value)}")
+        return self._set_value(_V_OFF, value)
 
     def _get_current_constant(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":CURR?"))
+        return self._get_value(_I_CONSTANT)
 
     def _set_current_constant(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR {value}")
-            else:
-                self._write(f":CURR {float(value)}")
+        return self._set_value(_I_CONSTANT, value)
 
     def _get_current_range(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":CURR:RANG?"))
+        return self._get_value(_I_RANGE)
 
     def _set_current_range(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR:RANG {value}") # TODO throw exception on bad value
-            else:
-                self._write(f":CURR:RANG {float(value)}")
+        return self._set_value(_I_RANGE, value)
 
     def _get_current_slew(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":CURR:SLEW?"))
+        # Only works if rise and fall are equal
+        return self._get_value(_I_SLEW)
 
     def _set_current_slew(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR:SLEW {value}")
-            else:
-                self._write(f":CURR:SLEW {float(value)}")
+        return self._set_value(_I_SLEW, value)
 
     def _get_current_slew_rise(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":CURR:SLEW:RISE?"))
+        return self._get_value(_I_SLEW_RISE)
 
     def _set_current_slew_rise(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR:SLEW:RISE {value}")
-            else:
-                self._write(f":CURR:SLEW:RISE {float(value)}")
+        return self._set_value(_I_SLEW_RISE, value)
 
     def _get_current_slew_fall(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":CURR:SLEW:FALL?"))
+        return self._get_value(_I_SLEW_FALL)
 
     def _set_current_slew_fall(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR:SLEW:FALL {value}")
-            else:
-                self._write(f":CURR:SLEW:FALL {float(value)}")
+        return self._set_value(_I_SLEW_FALL, value)
 
     def _get_current_protection(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":CURR:PROT?"))
+        return self._get_value(_I_PROTECTION)
 
     def _set_current_protection(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":CURR:PROT {value}")
-            else:
-                self._write(f":CURR:PROT {float(value)}")
+        return self._set_value(_I_PROTECTION, value)
 
     def _get_power_constant(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":POW?"))
+        return self._get_value(_P_CONSTANT)
 
     def _set_power_constant(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":POW {value}")
-            else:
-                self._write(f":POW {float(value)}")
+        return self._set_value(_P_CONSTANT, value)
 
     def _get_power_protection(self):
-        if not self._driver_operation_simulate:
-            return float(self._ask(":POW:PROT?"))
+        return self._get_value(_P_PROTOCTION)
 
     def _set_power_protection(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":POW:PROT {value}")
-            else:
-                self._write(f":POW:PROT {float(value)}")
+        return self._set_value(_P_PROTOCTION, value)
 
     def _get_resistance_constant(self):
-        if not self._driver_operation_simulate:
-            value = self._ask(":RES?")
-            return float('inf' if value.endswith('INF0') else value)
+        return self._get_value(_R_CONSTANT)
 
     def _set_resistance_constant(self, value):
-        if not self._driver_operation_simulate:
-            if isinstance(value, str):
-                value = value.upper()
-                if value == 'MIN' or value == 'MAX':
-                    self._write(f":RES {value}")
-            else:
-                self._write(f":RES {float(value)}")
+        return self._set_value(_R_CONSTANT, value)
 
     # Measurement functions
     def _measure_voltage(self):
