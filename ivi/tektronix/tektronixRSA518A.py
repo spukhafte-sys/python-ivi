@@ -27,17 +27,15 @@ THE SOFTWARE.
 
 from .tektronixBaseRSA import *
 
-class tektronixRSA306B(tektronixBaseRSA):
-    "Tektronix RSA306B IVI spectrum analyzer driver"
+class tektronixRSA518A(tektronixBaseRSA):
+    "Tektronix RSA518A IVI spectrum analyzer driver"
 
     def __init__(self, *args, **kwargs):
-        self.__dict__.setdefault('_instrument_id', 'RSA306B')
+        self.__dict__.setdefault('_instrument_id', 'RSA518A')
 
         super(tektronixRSA306B, self).__init__(*args, **kwargs)
 
         self._input_impedance = 50
         self._frequency_low = 9e3
-        self._frequency_high = 6.2e9
-
-
+        self._frequency_high = 18.0e9
 
