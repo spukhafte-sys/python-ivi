@@ -33,7 +33,7 @@ class tektronixRSA518A(tektronixBaseRSA):
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', 'RSA518A')
 
-        super(tektronixRSA306B, self).__init__(*args, **kwargs)
+        super(tektronixRSA518A, self).__init__(*args, **kwargs)
 
         self._input_impedance = 50
         self._frequency_low = 9e3

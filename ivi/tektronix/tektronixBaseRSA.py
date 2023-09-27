@@ -151,7 +151,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
         
-        super(agilentBase8590, self)._initialize(resource, id_query, reset, **keywargs)
+        super(tektronixBaseRSA, self)._initialize(resource, id_query, reset, **keywargs)
         
         # interface clear
         if not self._driver_operation_simulate:
@@ -253,10 +253,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         pass
 
 
-
     def _init_traces(self):
         try:
-            super(agilentBase8590, self)._init_traces()
+            super(tektonixBaseRSA, self)._init_traces()
         except AttributeError:
             pass
 
@@ -322,17 +321,17 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         
         rtl = io.BytesIO(self._read_raw())
 
-        img = hprtl.parse_hprtl(rtl)
+#       img = hprtl.parse_hprtl(rtl)
 
         # rescale to get white background
         # presuming background of (90, 88, 85)
-        np.multiply(img[:,:,0], 255/90, out=img[:,:,0], casting='unsafe')
-        np.multiply(img[:,:,1], 255/88, out=img[:,:,1], casting='unsafe')
-        np.multiply(img[:,:,2], 255/85, out=img[:,:,2], casting='unsafe')
+#       np.multiply(img[:,:,0], 255/90, out=img[:,:,0], casting='unsafe')
+#       np.multiply(img[:,:,1], 255/88, out=img[:,:,1], casting='unsafe')
+#       np.multiply(img[:,:,2], 255/85, out=img[:,:,2], casting='unsafe')
 
-        bmp = hprtl.generate_bmp(img)
+#       bmp = hprtl.generate_bmp(img)
 
-        return bmp
+        return #bmp
     
     def _memory_save(self, index):
         index = int(index)

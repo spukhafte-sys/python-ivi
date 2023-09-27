@@ -86,3 +86,11 @@ from .tektronixOA5032 import tektronixOA5032
 
 # Current probe amplifiers
 from .tektronixAM5030 import tektronixAM5030
+
+# Real-Time Spectrum Analyzers
+from .tektronixRSA306B import tektronixRSA306B
+from .tektronixRSA503A import tektronixRSA503A
+from .tektronixRSA507A import tektronixRSA507A
+from .tektronixRSA513A import tektronixRSA513A
+from .tektronixRSA518A import tektronixRSA518A
+
