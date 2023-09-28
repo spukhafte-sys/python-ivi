@@ -53,6 +53,16 @@ class bk8542B(scpi.load.Base):
         self._identity_instrument_manufacturer = "B&K Precision"
         self._identity_supported_instrument_models = ['8542B']
 
+        # This hack flushes the load's output buffer. TODO: put this where it belongs
+        if kwargs.get('reset', True):
+            timeout = self._interface.timeout
+            self._interface.timeout = 1
+            try:
+                self._interface.read()
+            except:
+                pass
+            self._interface.timeout = timeout
+
     # This load only has one channel 
     def _get_channel(self):
         pass

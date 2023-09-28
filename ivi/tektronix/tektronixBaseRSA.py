@@ -37,6 +37,7 @@ import numpy as np
 
 from .. import ivi
 from .. import specan
+from .. import scpi
 from .. import extra
 
 AmplitudeUnitsMapping = {'dBm' : 'dbm',
@@ -44,6 +45,7 @@ AmplitudeUnitsMapping = {'dBm' : 'dbm',
                          'dBuV' : 'dbuv',
                          'volt' : 'v',
                          'watt' : 'w'}
+
 DetectorTypeMapping = {'maximum_peak' : 'pos',
                        'minimum_peak' : 'neg',
                        'sample' : 'smp'}
@@ -179,10 +181,14 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._identity_instrument_serial_number = "Not available while simulating"
             self._identity_instrument_firmware_revision = "Not available while simulating"
         else:
-            self._identity_instrument_manufacturer = "Tektronix"
-            self._identity_instrument_model = self._ask("ID?")
-            self._identity_instrument_serial_number = self._ask("SER?")
-            self._identity_instrument_firmware_revision = self._ask("REV?")
+            # Build compound identity information of Signal-VU and USB RSAs
+            (self._identity_instrument_manufacturer,
+                self._identity_instrument_model,
+                self._identity_instrument_serial_number,
+                resp ) = self._ask('*IDN?').split(',')
+            self._identity_instrument_firmware_revision = resp.split(':')[-1]
+            self._identity_instrument_model += '/' + self._ask('SYST:SVPC:INST:MOD?').strip('"')
+            self._identity_instrument_serial_number += '/' + self._ask('SYST:SVPC:INST:SER?').strip('"')
             self._set_cache_valid(True, 'identity_instrument_manufacturer')
             self._set_cache_valid(True, 'identity_instrument_model')
             self._set_cache_valid(True, 'identity_instrument_serial_number')
@@ -255,7 +261,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
 
     def _init_traces(self):
         try:
-            super(tektonixBaseRSA, self)._init_traces()
+            super(tektronixBaseRSA, self)._init_traces()
         except AttributeError:
             pass
 

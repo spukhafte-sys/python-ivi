@@ -104,10 +104,10 @@ class sunEC1X(ivi.Driver):
             ivi.Doc("""
             """))
 
-    def _initialize(self, resource=None, id_query=False, reset=False, **keywargs):
+    def _initialize(self, resource=None, id_query=False, reset=False, **kwargs):
         "Opens an I/O session to the instrument."
 
-        super(sunEC1X, self)._initialize(resource, id_query, reset, **keywargs)
+        super(sunEC1X, self)._initialize(resource, id_query, reset, **kwargs)
 
         # interface clear
         if not self._driver_operation_simulate:
