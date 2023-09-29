@@ -61,16 +61,16 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         specan.Base,
         extra.common.Screenshot, ivi.Driver):
     "Tektronix RSA series IVI spectrum analyzer driver"
-    
+   
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', '')
-        
+       
         super(tektronixBaseRSA, self).__init__(*args, **kwargs)
-        
+       
         self._trace_count = 3
 
         self._memory_size = 9
-        
+       
         self._input_impedance = 50
         self._frequency_low = 9e3
         self._frequency_high = 3.0e9
@@ -95,7 +95,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['RSA306B', 'RSA500', 'RSA600', 'RSA5000B', 'RSA7100B', ]
-        
+       
         self._add_method('display.clear',
                         self._display_clear,
                         ivi.Doc("""
@@ -108,7 +108,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
                         self._system_display_string,
                         ivi.Doc("""
                         Writes a string to the advisory line on the instrument display.  Send None
-                        or an empty string to clear the advisory line.  
+                        or an empty string to clear the advisory line. 
                         """))
 
         self._add_property('frequency.center',
@@ -149,18 +149,18 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
                         self._set_alc_source)
 
         self._init_traces()
-    
-    def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
+   
+    def _initialize(self, resource=None, id_query=False, reset=False, **kwargs):
         "Opens an I/O session to the instrument."
-        
-        super(tektronixBaseRSA, self)._initialize(resource, id_query, reset, **keywargs)
-        
+       
+        super(tektronixBaseRSA, self)._initialize(resource, id_query, reset, **kwargs)
+       
         # interface clear
         if not self._driver_operation_simulate:
             # don't clear; actually resets device
             #self._clear()
             pass
-        
+       
         # check ID
         if id_query and not self._driver_operation_simulate:
             id = self.identity.instrument_model
@@ -168,12 +168,11 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             id_short = id[:len(id_check)]
             if id_short != id_check:
                 raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
-        
+       
         # reset
         if reset:
             self.utility.reset()
-        
-    
+   
     def _load_id_string(self):
         if self._driver_operation_simulate:
             self._identity_instrument_manufacturer = "Not available while simulating"
@@ -193,34 +192,34 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._set_cache_valid(True, 'identity_instrument_model')
             self._set_cache_valid(True, 'identity_instrument_serial_number')
             self._set_cache_valid(True, 'identity_instrument_firmware_revision')
-    
+   
     def _get_identity_instrument_manufacturer(self):
         if self._get_cache_valid():
             return self._identity_instrument_manufacturer
         self._load_id_string()
         return self._identity_instrument_manufacturer
-    
+   
     def _get_identity_instrument_model(self):
         if self._get_cache_valid():
             return self._identity_instrument_model
         self._load_id_string()
         return self._identity_instrument_model
-    
+   
     def _get_identity_instrument_serial_number(self):
         if self._get_cache_valid():
             return self._identity_instrument_serial_number
         self._load_id_string()
         return self._identity_instrument_serial_number
-    
+   
     def _get_identity_instrument_firmware_revision(self):
         if self._get_cache_valid():
             return self._identity_instrument_firmware_revision
         self._load_id_string()
         return self._identity_instrument_firmware_revision
-    
+   
     def _utility_disable(self):
         pass
-    
+   
     def _utility_error_query(self):
         error_code = 0
         error_message = "No error"
@@ -230,18 +229,18 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             error_code = int(error_code)
             error_message = error_message.strip(' "')
         return (error_code, error_message)
-    
+   
     def _utility_lock_object(self):
         pass
-    
+   
     def _utility_reset(self):
         if not self._driver_operation_simulate:
             self._write("IP")
             self.driver_operation.invalidate_all_attributes()
-    
+   
     def _utility_reset_with_defaults(self):
         self._utility_reset()
-    
+   
     def _utility_self_test(self):
         code = 0
         message = "Self test passed"
@@ -254,7 +253,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             if code != 0:
                 message = "Self test failed"
         return (code, message)
-    
+   
     def _utility_unlock_object(self):
         pass
 
@@ -276,32 +275,32 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _system_fetch_setup(self):
         if self._driver_operation_simulate:
             return b''
-        
+       
         self._write("OL?")
-        
+       
         return self._read_raw()
-    
+   
     def _system_load_setup(self, data):
         if self._driver_operation_simulate:
             return
-        
+       
         self._write_raw(data)
-    
+   
     def _system_display_string(self, string=None):
         if string is None:
             string = ""
-        
+       
         if not self._driver_operation_simulate:
             self._write("PU")
             self._write("PA 8,137")
             self._write("HD")
             self._write("TEXT \\%s\\" % string)
-    
+   
     def _display_clear(self):
         if not self._driver_operation_simulate:
             self._write("HD")
             self._write("CLRDSP")
-    
+   
     def _get_display_title(self):
         # cannot read
         return self._display_title
@@ -316,15 +315,15 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _display_fetch_screenshot(self, format='bmp', invert=False):
         if self._driver_operation_simulate:
             return b''
-        
+       
         #if format not in ScreenshotImageFormatMapping:
         #    raise ivi.ValueNotSupportedException()
-        
+       
         #format = ScreenshotImageFormatMapping[format]
-        
+       
         self._write("PRNPRT 0")
         self._write("PRINT 1")
-        
+       
         rtl = io.BytesIO(self._read_raw())
 
 #       img = hprtl.parse_hprtl(rtl)
@@ -338,14 +337,14 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
 #       bmp = hprtl.generate_bmp(img)
 
         return #bmp
-    
+   
     def _memory_save(self, index):
         index = int(index)
         if index < 0 or index >= self._memory_size:
             raise OutOfRangeException()
         if not self._driver_operation_simulate:
             self._write("SAVES %d" % index+1)
-    
+   
     def _memory_recall(self, index):
         index = int(index)
         if index < 0 or index >= self._memory_size:
@@ -486,7 +485,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._level_amplitude_units = [k for k,v in AmplitudeUnitsMapping.items() if v==value][0]
             self._set_cache_valid()
         return self._level_amplitude_units
-    
+   
     def _set_level_amplitude_units(self, value):
         if value not in AmplitudeUnitsMapping:
             raise ivi.ValueNotSupportedException()
@@ -494,38 +493,38 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._write("aunits %s" % AmplitudeUnitsMapping[value])
         self._level_amplitude_units = value
         self._set_cache_valid()
-    
+   
     def _get_level_attenuation(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._level_attenuation = float(self._ask("at?"))
             self._set_cache_valid()
         return self._level_attenuation
-    
+   
     def _set_level_attenuation(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
             self._write("at %e db" % value)
         self._level_attenuation = value
         self._set_cache_valid()
-    
+   
     def _get_level_attenuation_auto(self):
         # TODO is it possible to read this?
         return self._level_attenuation_auto
-    
+   
     def _set_level_attenuation_auto(self, value):
         value = bool(value)
         if not self._driver_operation_simulate:
             self._write("at %s" % ('auto' if value else 'man'))
         self._level_attenuation_auto = value
         self._set_cache_valid()
-    
+   
     def _get_acquisition_detector_type(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             value = self._ask("det?").lower()
             self._acquisition_detector_type = [k for k,v in DetectorTypeMapping.items() if v==value][0]
             self._set_cache_valid()
         return self._acquisition_detector_type
-    
+   
     def _set_acquisition_detector_type(self, value):
         if value not in DetectorTypeMapping:
             raise ivi.ValueNotSupportedException()
@@ -533,20 +532,20 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._write(":det %s" % DetectorTypeMapping[value])
         self._acquisition_detector_type = value
         self._set_cache_valid()
-    
+   
     def _get_acquisition_detector_type_auto(self):
         return self._acquisition_detector_type_auto
-    
+   
     def _set_acquisition_detector_type_auto(self, value):
         value = bool(value)
         self._acquisition_detector_type_auto = value
-    
+   
     def _get_frequency_start(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._frequency_start = float(self._ask("fa?"))
             self._set_cache_valid()
         return self._frequency_start
-    
+   
     def _set_frequency_start(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
@@ -558,13 +557,13 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._set_cache_valid(False, 'sweep_coupling_resolution_bandwidth')
         self._set_cache_valid(False, 'sweep_coupling_sweep_time')
         self._set_cache_valid(False, 'sweep_coupling_video_bandwidth')
-    
+   
     def _get_frequency_stop(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._frequency_stop = float(self._ask("fb?"))
             self._set_cache_valid()
         return self._frequency_stop
-    
+   
     def _set_frequency_stop(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
@@ -612,66 +611,66 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._set_cache_valid(False, 'sweep_coupling_resolution_bandwidth')
         self._set_cache_valid(False, 'sweep_coupling_sweep_time')
         self._set_cache_valid(False, 'sweep_coupling_video_bandwidth')
-    
+   
     def _get_frequency_offset(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._frequency_stop = float(self._ask("foffset?"))
             self._set_cache_valid()
         return self._frequency_offset
-    
+   
     def _set_frequency_offset(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
             self._write("foffset %e hz" % value)
         self._frequency_offset = value
         self._set_cache_valid()
-    
+   
     def _get_level_input_impedance(self):
         return self._level_input_impedance
-    
+   
     def _set_level_input_impedance(self, value):
         value = float(value)
         self._level_input_impedance = value
-    
+   
     def _get_acquisition_number_of_sweeps(self):
         return self._acquisition_number_of_sweeps
-    
+   
     def _set_acquisition_number_of_sweeps(self, value):
         value = int(value)
         self._acquisition_number_of_sweeps = value
-    
+   
     def _get_level_reference(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
-            self._level_reference = float(self._ask("rl?"))
+            self._level_reference = float(self._ask("INP:RLEVEL?"))
             self._set_cache_valid()
         return self._level_reference
-    
+   
     def _set_level_reference(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
-            self._write("rl %e db" % value)
+            self._write("INP:RLEVEL %e" % value)
         self._level_reference = value
         self._set_cache_valid()
-    
+   
     def _get_level_reference_offset(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._level_reference = float(self._ask("roffset?"))
             self._set_cache_valid()
         return self._level_reference_offset
-    
+   
     def _set_level_reference_offset(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
             self._write("roffset %e db" % value)
         self._level_reference_offset = value
         self._set_cache_valid()
-    
+   
     def _get_sweep_coupling_resolution_bandwidth(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._sweep_coupling_resolution_bandwidth = float(self._ask("rb?"))
             self._set_cache_valid()
         return self._sweep_coupling_resolution_bandwidth
-    
+   
     def _set_sweep_coupling_resolution_bandwidth(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
@@ -680,11 +679,11 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._sweep_coupling_resolution_bandwidth_auto = False
         self._set_cache_valid()
         self._set_cache_valid(True, 'sweep_coupling_resolution_bandwidth_auto')
-    
+   
     def _get_sweep_coupling_resolution_bandwidth_auto(self):
         # TODO is it possible to read this?
         return self._sweep_coupling_resolution_bandwidth_auto
-    
+   
     def _set_sweep_coupling_resolution_bandwidth_auto(self, value):
         value = bool(value)
         if not self._driver_operation_simulate:
@@ -694,20 +693,20 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
                 self._set_sweep_coupling_resolution_bandwidth(self._get_sweep_coupling_resolution_bandwidth())
         self._sweep_coupling_resolution_bandwidth_auto = value
         self._set_cache_valid()
-    
+   
     def _get_acquisition_sweep_mode_continuous(self):
         return self._acquisition_sweep_mode_continuous
-    
+   
     def _set_acquisition_sweep_mode_continuous(self, value):
         value = bool(value)
         self._acquisition_sweep_mode_continuous = value
-    
+   
     def _get_sweep_coupling_sweep_time(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._sweep_coupling_sweep_time = float(self._ask("st?"))
             self._set_cache_valid()
         return self._sweep_coupling_sweep_time
-    
+   
     def _set_sweep_coupling_sweep_time(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
@@ -716,11 +715,11 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._sweep_coupling_sweep_time_auto = False
         self._set_cache_valid()
         self._set_cache_valid(True, 'sweep_coupling_sweep_time_auto')
-    
+   
     def _get_sweep_coupling_sweep_time_auto(self):
         # TODO is it possible to read this?
         return self._sweep_coupling_sweep_time_auto
-    
+   
     def _set_sweep_coupling_sweep_time_auto(self, value):
         value = bool(value)
         if not self._driver_operation_simulate:
@@ -730,17 +729,17 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
                 self._set_sweep_coupling_sweep_time(self._get_sweep_coupling_sweep_time())
         self._sweep_coupling_sweep_time_auto = value
         self._set_cache_valid()
-    
+   
     def _get_trace_type(self, index):
         index = ivi.get_index(self._trace_name, index)
         return self._trace_type[index]
-    
+   
     def _set_trace_type(self, index, value):
         index = ivi.get_index(self._trace_name, index)
         if value not in TraceType:
             raise ivi.ValueNotSupportedException()
         self._trace_type[index] = value
-    
+   
     def _get_acquisition_vertical_scale(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._acquisition_vertical_scale = 'logarithmic' if (self._ask("lg?") != '0') else 'linear'
@@ -758,13 +757,13 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._acquisition_vertical_scale = value
         self._set_cache_valid()
         self._set_cache_valid(False, 'level_reference')
-    
+   
     def _get_sweep_coupling_video_bandwidth(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._sweep_coupling_resolution_bandwidth = float(self._ask("vb?"))
             self._set_cache_valid()
         return self._sweep_coupling_video_bandwidth
-    
+   
     def _set_sweep_coupling_video_bandwidth(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
@@ -773,11 +772,11 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._sweep_coupling_video_bandwidth_auto = False
         self._set_cache_valid()
         self._set_cache_valid(True, 'sweep_coupling_video_bandwidth_auto')
-    
+   
     def _get_sweep_coupling_video_bandwidth_auto(self):
         # TODO is it possible to read this?
         return self._sweep_coupling_video_bandwidth_auto
-    
+   
     def _set_sweep_coupling_video_bandwidth_auto(self, value):
         value = bool(value)
         if not self._driver_operation_simulate:
@@ -787,13 +786,13 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
                 self._set_sweep_coupling_video_bandwidth(self._get_sweep_coupling_video_bandwidth())
         self._sweep_coupling_video_bandwidth_auto = value
         self._set_cache_valid()
-    
+   
     def _acquisition_abort(self):
         pass
-    
+   
     def _acquisition_status(self):
         return 'unknown'
-    
+   
     def _trace_fetch_y(self, index):
         index = ivi.get_index(self._trace_name, index)
 
@@ -846,8 +845,8 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
 
     def _acquisition_initiate(self):
         pass
-    
+   
     def _trace_read_y(self, index):
         return self._trace_fetch_y(index)
-    
-    
+   
+   

@@ -53,12 +53,16 @@ class bk8542B(scpi.load.Base):
         self._identity_instrument_manufacturer = "B&K Precision"
         self._identity_supported_instrument_models = ['8542B']
 
-        # This hack flushes the load's output buffer. TODO: put this where it belongs
-        if kwargs.get('reset', True):
+    def _initialize(self, resource=None, id_query=False, reset=False, **kwargs):
+
+        super(bk8542B, self)._initialize(resource, id_query, reset, **kwargs)
+
+        if reset:  # Only way to clear the input buffer?
             timeout = self._interface.timeout
             self._interface.timeout = 1
             try:
-                self._interface.read()
+                while True:
+                    self._interface.read()
             except:
                 pass
             self._interface.timeout = timeout
