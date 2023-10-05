@@ -31,7 +31,6 @@ class MarkerNotEnabledException(ivi.IviException): pass
 class NotDeltaMarkerException(ivi.IviException): pass
 
 # Parameter Values
-AmplitudeUnits = set(['dBm', 'dBmV', 'dBuV', 'volt', 'watt'])
 DetectorType = set(['auto_peak', 'average', 'maximum_peak', 'minimum_peak', 'sample', 'rms'])
 TraceType = set(['clear_write', 'maximum_hold', 'minimum_hold', 'video_average', 'view', 'store'])
 VerticalScale = set(['linear', 'logarithmic'])
@@ -267,6 +266,8 @@ class Base(ivi.IviContainer):
                         If set to True, the video bandwidth is automatically selected. If set to
                         False, the video bandwidth is manually selected.
                         """)
+
+        # Methods
         self._add_method('acquisition.abort',
                        self._acquisition_abort,
                        """
@@ -389,8 +390,6 @@ class Base(ivi.IviContainer):
         return self._level_amplitude_units
     
     def _set_level_amplitude_units(self, value):
-        if value not in AmplitudeUnits:
-            raise ivi.ValueNotSupportedException()
         self._level_amplitude_units = value
     
     def _get_level_attenuation(self):

@@ -40,12 +40,6 @@ from .. import specan
 from .. import scpi
 from .. import extra
 
-AmplitudeUnitsMapping = {'dBm' : 'dbm',
-                         'dBmV' : 'dbmv',
-                         'dBuV' : 'dbuv',
-                         'volt' : 'v',
-                         'watt' : 'w'}
-
 DetectorTypeMapping = {'maximum_peak' : 'pos',
                        'minimum_peak' : 'neg',
                        'sample' : 'smp'}
@@ -55,6 +49,13 @@ VerticalScale = set(['linear', 'logarithmic'])
 ALCSourceMapping = {'internal': 'int',
                     'external': 'ext'}
 PowerMode = set(['fixed', 'sweep'])
+MeasurementMapping = {'spurious': 'SPUR'}
+OscillatorSources = ('ext', 'int')
+
+AmplitudeUnits = ('dbm', 'dbv', 'volt', 'watt', 'dbuw', 'dbw',
+    'dbuv', 'dbmv', 'dbua', 'dbuv_m', 'dbua_m', 'amp')
+DetectorTypes = ('aver', 'peak', 'milstd', 'quas', 'cav', 'avgl', 'cavl', 'dsa', 'dsp')
+TraceFunctions = ('none', 'maxh', 'aver', 'avgl')
 
 class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Memory,
         scpi.common.SystemSetup,
@@ -67,7 +68,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
        
         super(tektronixBaseRSA, self).__init__(*args, **kwargs)
        
-        self._trace_count = 3
+        self._trace_count = 4
 
         self._memory_size = 9
        
@@ -96,28 +97,12 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['RSA306B', 'RSA500', 'RSA600', 'RSA5000B', 'RSA7100B', ]
        
-        self._add_method('display.clear',
-                        self._display_clear,
-                        ivi.Doc("""
-                        Clears the display and resets all associated measurements. If the
-                        oscilloscope is stopped, all currently displayed data is erased. If the
-                        oscilloscope is running, all the data in active channels and functions is
-                        erased; however, new data is displayed on the next acquisition.
-                        """))
-        self._add_method('system.display_string',
-                        self._system_display_string,
-                        ivi.Doc("""
-                        Writes a string to the advisory line on the instrument display.  Send None
-                        or an empty string to clear the advisory line. 
-                        """))
-
         self._add_property('frequency.center',
                         self._get_frequency_center,
                         self._set_frequency_center)
         self._add_property('frequency.span',
                         self._get_frequency_span,
                         self._set_frequency_span)
-
         self._add_property('rf.level',
                         self._get_rf_level,
                         self._set_rf_level)
@@ -142,11 +127,71 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('rf.tracking_adjust',
                         self._get_rf_tracking_adjust,
                         self._set_rf_tracking_adjust)
-        self._add_method('rf.tracking_peak',
-                        self._rf_tracking_peak)
         self._add_property('alc.source',
                         self._get_alc_source,
                         self._set_alc_source)
+        self._add_property('oscillator.source',
+                        self._get_oscillator_source,
+                        self._set_oscillator_source)
+        self._add_property('oscillator.locked',
+                        self._get_oscillator_locked)
+        self._add_property('acquisition.continuous',
+                        self._get_alc_source,
+                        self._set_alc_source)
+        self._add_property('spurious.enabled',
+                        self._get_spurious_enabled,
+                        self._set_spurious_enabled)
+        self._add_property('spurious.ranges[].frequency_start',
+                        self._get_spurious_ranges_frequency_start,
+                        self._set_spurious_ranges_frequency_start)
+        self._add_property('spurious.ranges[].limit.absolute_start',
+                        self._get_spurious_ranges_limit_absolute_start,
+                        self._set_spurious_ranges_limit_absolute_start)
+        self._add_property('spurious.traces[].function',
+                        self._get_spurious_ranges_limit_absolute_start,
+                        self._set_spurious_ranges_limit_absolute_start)
+        self._add_property('spurious.traces[].frozen',
+                        self._get_spurious_ranges_limit_absolute_start,
+                        self._set_spurious_ranges_limit_absolute_start)
+        self._add_property('spurious.traces[].enabled',
+                        self._get_spurious_ranges_limit_absolute_start,
+                        self._set_spurious_ranges_limit_absolute_start)
+        self._add_property('spurious.traces[].count',
+                        self._get_spurious_ranges_limit_absolute_start,
+                        self._set_spurious_ranges_limit_absolute_start)
+        self._add_property('spurious.traces[].count_enabled',
+                        self._get_spurious_ranges_limit_absolute_start,
+                        self._set_spurious_ranges_limit_absolute_start)
+
+        # Methods
+        self._add_method('display.clear',
+                        self._display_clear,
+                        ivi.Doc("""
+                        Clears the display and resets all associated measurements. If the
+                        oscilloscope is stopped, all currently displayed data is erased. If the
+                        oscilloscope is running, all the data in active channels and functions is
+                        erased; however, new data is displayed on the next acquisition.
+                        """))
+        self._add_method('system.display_string',
+                        self._system_display_string,
+                        ivi.Doc("""
+                        Writes a string to the advisory line on the instrument display.  Send None
+                        or an empty string to clear the advisory line. 
+                        """))
+        self._add_method('rf.tracking_peak',
+                        self._rf_tracking_peak)
+        self._add_method('acquisition.start',
+                        self._acquisition_start,
+                        ivi.Doc('Start signal acquisition.'))
+        self._add_method('spurious.preset',
+                        self._spurious_preset,
+                        ivi.Doc('Start signal acquisition.'))
+        self._add_method('spurious.traces[].count_reset',
+                        self._spurious_preset,
+                        ivi.Doc('Start signal acquisition.'))
+        self._add_method('spurious.fetch.spectrum_x',
+                        self._spurious_preset,
+                        ivi.Doc('Start signal acquisition.'))
 
         self._init_traces()
    
@@ -267,7 +312,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._trace_name = list()
         self._trace_type = list()
         for i in range(self._trace_count):
-            self._trace_name.append("tr%c" % (i+ord('a')))
+            self._trace_name.append('Trace %d' % (i+1))
             self._trace_type.append('')
 
         self.traces._set_list(self._trace_name)
@@ -479,44 +524,80 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._set_cache_valid()
         self._alc_source = value
 
-    def _get_level_amplitude_units(self):
+    def _get_spurious_enabled(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
-            value = self._ask("aunits?").lower()
-            self._level_amplitude_units = [k for k,v in AmplitudeUnitsMapping.items() if v==value][0]
+            value = self._ask("srcalc?").lower()
+            self._alc_source = [k for k,v in ALCSourceMapping.items() if v==value][0]
             self._set_cache_valid()
-        return self._level_amplitude_units
-   
-    def _set_level_amplitude_units(self, value):
-        if value not in AmplitudeUnitsMapping:
+        return self._alc_source
+
+    def _set_spurious_enabled(self, value):
+        if value not in ALCSourceMapping:
             raise ivi.ValueNotSupportedException()
         if not self._driver_operation_simulate:
-            self._write("aunits %s" % AmplitudeUnitsMapping[value])
+            self._write("srcalc %s" % ALCSourceMapping[value])
+            self._set_cache_valid()
+        self._alc_source = value
+
+    def _get_spurious_ranges_frequency_start(self, index):
+        if not self._driver_operation_simulate:
+            return self._ask(f"SENS:SPUR:RANG{index-1}:FREQ:STAR").lower()
+
+    def _set_spurious_ranges_frequency_start(self, value):
+        if value not in ALCSourceMapping:
+            raise ivi.ValueNotSupportedException()
+        if not self._driver_operation_simulate:
+            self._write("srcalc %s" % ALCSourceMapping[value])
+            self._set_cache_valid()
+        self._alc_source = value
+
+    def _get_spurious_ranges_limit_absolute_start(self):
+        if not self._driver_operation_simulate and not self._get_cache_valid():
+            value = self._ask("srcalc?").lower()
+            self._alc_source = [k for k,v in ALCSourceMapping.items() if v==value][0]
+            self._set_cache_valid()
+        return self._alc_source
+
+    def _set_spurious_ranges_limit_absolute_start(self, value):
+        if value not in ALCSourceMapping:
+            raise ivi.ValueNotSupportedException()
+        if not self._driver_operation_simulate:
+            self._write("srcalc %s" % ALCSourceMapping[value])
+            self._set_cache_valid()
+        self._alc_source = value
+
+    def _get_level_amplitude_units(self):
+        if not self._driver_operation_simulate:
+            self._level_amplitude.units =  self._ask("POW:UNIT?").lower()
+        return self._level_amplitude.units
+   
+    def _set_level_amplitude_units(self, value):
+        value = value.lower()
+        if value not in AmplitudeUnits:
+            raise ivi.ValueNotSupportedException()
+
+        if not self._driver_operation_simulate:
+            self._write(f'POW:UNIT {value.upper()}')
         self._level_amplitude_units = value
-        self._set_cache_valid()
    
     def _get_level_attenuation(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            self._level_attenuation = float(self._ask("at?"))
-            self._set_cache_valid()
+        if not self._driver_operation_simulate:
+            self._level_attenuation = float(self._ask('INP:ATT?'))
         return self._level_attenuation
    
     def _set_level_attenuation(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
-            self._write("at %e db" % value)
-        self._level_attenuation = value
-        self._set_cache_valid()
+            self._write(f'INP:ATT {value}')
    
     def _get_level_attenuation_auto(self):
-        # TODO is it possible to read this?
-        return self._level_attenuation_auto
+        return self._ask('INP:ATT:AUTO?') == '1'
    
     def _set_level_attenuation_auto(self, value):
         value = bool(value)
         if not self._driver_operation_simulate:
-            self._write("at %s" % ('auto' if value else 'man'))
+            self._write(f"INP:ATT:AUTO {'1' if value else '0'}")
         self._level_attenuation_auto = value
-        self._set_cache_valid()
    
     def _get_acquisition_detector_type(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
@@ -539,7 +620,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _set_acquisition_detector_type_auto(self, value):
         value = bool(value)
         self._acquisition_detector_type_auto = value
-   
+
     def _get_frequency_start(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
             self._frequency_start = float(self._ask("fa?"))
@@ -787,11 +868,29 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._sweep_coupling_video_bandwidth_auto = value
         self._set_cache_valid()
    
+    def _get_oscillator_source(self):
+        return self._ask('ROSC:SOUR?').lower()
+
+    def _set_oscillator_source(self, value):
+        if value.lower() in OscillatorSources:
+            self._write(f'ROSC:SOUR {value.upper()}')
+        else:
+            raise ivi.ValueNotSupportedException()
+
+    def _get_oscillator_locked(self):
+        return self._ask('ROSC:EXT:TIME:STAT?') == '1'
+   
     def _acquisition_abort(self):
-        pass
+        self._write('ABOR')
    
     def _acquisition_status(self):
         return 'unknown'
+
+    def _acquisition_start(self):
+        self._write('INIT:IMM')
+
+    def _spurious_preset(self):
+        self._write('SYST:PRES:APPL SPUR')
    
     def _trace_fetch_y(self, index):
         index = ivi.get_index(self._trace_name, index)
