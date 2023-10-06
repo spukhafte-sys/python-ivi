@@ -3,7 +3,7 @@
 Python Interchangeable Virtual Instrument Library
 
 Copyright (c) 2013-2017 Alex Forencich
-              2023      Fred Fierling
+Copyright (c) 2023      Fred Fierling
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -62,14 +62,13 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         specan.Base,
         extra.common.Screenshot, ivi.Driver):
     "Tektronix RSA series IVI spectrum analyzer driver"
-   
+    
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', '')
        
         super(tektronixBaseRSA, self).__init__(*args, **kwargs)
        
         self._trace_count = 4
-
         self._memory_size = 9
        
         self._input_impedance = 50
@@ -85,6 +84,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._rf_power_span = 0.0
         self._rf_tracking_adjust = 0
         self._alc_source = 'internal'
+        self._range_name = [x for x in iter('ABCDEFGHIJKLMNOPQRST')]
 
         self._identity_description = "Tektronix RSA series IVI spectrum analyzer driver"
         self._identity_identifier = ""
@@ -141,6 +141,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('spurious.enabled',
                         self._get_spurious_enabled,
                         self._set_spurious_enabled)
+        self._add_property('spurious.ranges[].config',
+                        self._get_spurious_ranges,
+                        self._set_spurious_ranges)
         self._add_property('spurious.ranges[].frequency_start',
                         self._get_spurious_ranges_frequency_start,
                         self._set_spurious_ranges_frequency_start)
@@ -192,8 +195,12 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_method('spurious.fetch.spectrum_x',
                         self._spurious_preset,
                         ivi.Doc('Start signal acquisition.'))
+        self._add_method('spurious.fetch.spectrum_y',
+                        self._spurious_preset,
+                        ivi.Doc('Start signal acquisition.'))
 
-        self._init_traces()
+#       self._init_traces()
+        self.spurious.ranges._set_list(self._range_name)
    
     def _initialize(self, resource=None, id_query=False, reset=False, **kwargs):
         "Opens an I/O session to the instrument."
@@ -303,19 +310,21 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         pass
 
 
-    def _init_traces(self):
-        try:
-            super(tektronixBaseRSA, self)._init_traces()
-        except AttributeError:
-            pass
+#   def _init_traces(self):
+#       try:
+#           super(tektronixBaseRSA, self)._init_traces()
+#       except AttributeError:
+#           pass
 
-        self._trace_name = list()
-        self._trace_type = list()
-        for i in range(self._trace_count):
-            self._trace_name.append('Trace %d' % (i+1))
-            self._trace_type.append('')
+#       self._trace_name = list()
+#       self._trace_type = list()
+#       for i in range(self._trace_count):
+#           self._trace_name.append('Trace %d' % (i+1))
+#           self._trace_type.append('')
+#       self._trace_name.append('Math')
 
-        self.traces._set_list(self._trace_name)
+#       self.traces._set_list(self._trace_name)
+#       self.spurious.ranges._set_list(self._range_name)
 
     def _system_fetch_setup(self):
         if self._driver_operation_simulate:
@@ -539,17 +548,21 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._set_cache_valid()
         self._alc_source = value
 
+    def _get_spurious_ranges(self, index):
+        if not self._driver_operation_simulate:
+            return {}
+
+    def _set_spurious_ranges(self, index, value):
+        if not self._driver_operation_simulate:
+            self._write(f"SENS:SPUR:RANG{index+1:d}:FREQ:STAR {value}")
+
     def _get_spurious_ranges_frequency_start(self, index):
         if not self._driver_operation_simulate:
-            return self._ask(f"SENS:SPUR:RANG{index-1}:FREQ:STAR").lower()
+            return self._ask(f"SENS:SPUR:RANG{index+1:d}:FREQ:STAR?").lower()
 
-    def _set_spurious_ranges_frequency_start(self, value):
-        if value not in ALCSourceMapping:
-            raise ivi.ValueNotSupportedException()
+    def _set_spurious_ranges_frequency_start(self, index, value):
         if not self._driver_operation_simulate:
-            self._write("srcalc %s" % ALCSourceMapping[value])
-            self._set_cache_valid()
-        self._alc_source = value
+            self._write(f"SENS:SPUR:RANG{index+1:d}:FREQ:STAR {value}")
 
     def _get_spurious_ranges_limit_absolute_start(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
