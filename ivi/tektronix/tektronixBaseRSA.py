@@ -46,16 +46,63 @@ DetectorTypeMapping = {'maximum_peak' : 'pos',
 #TraceType = set(['clear_write', 'maximum_hold', 'minimum_hold', 'video_average', 'view', 'store'])
 VerticalScale = set(['linear', 'logarithmic'])
 #AcquisitionStatus = set(['complete', 'in_progress', 'unknown'])
-ALCSourceMapping = {'internal': 'int',
-                    'external': 'ext'}
+ALCSourceMapping = {'internal': 'int', 'external': 'ext'}
 PowerMode = set(['fixed', 'sweep'])
 MeasurementMapping = {'spurious': 'SPUR'}
-OscillatorSources = ('ext', 'int')
+OscillatorSources = ('EXT', 'INT')
+AmplitudeUnits = ('DBM', 'DBV', 'VOLT', 'WATT', 'DBUW', 'DBW',
+    'DBUV', 'DBMV', 'DBUA', 'DBUV_M', 'DBUA_M', 'AMP')
+DetectorTypes = ('AVER', 'PEAK', 'MILSTD', 'QUAS', 'CAV', 'AVGL', 'CAVL', 'DSA', 'DSP')
+TraceFunctions = ('NONE', 'MAXH', 'AVER', 'AVGL')
+SpurMeasurements = { 'absolute_amplitude': 'AMP:ABS', 'relative_amplitude': 'AMP:REL',
+    'absolute_frequency': 'FREQ:ABS', 'relative_frequency': 'FREQ:REL',
+    'absolute_limit': 'LIM:ABS', 'relative_limit': 'LIM:REL',
+    }
 
-AmplitudeUnits = ('dbm', 'dbv', 'volt', 'watt', 'dbuw', 'dbw',
-    'dbuv', 'dbmv', 'dbua', 'dbuv_m', 'dbua_m', 'amp')
-DetectorTypes = ('aver', 'peak', 'milstd', 'quas', 'cav', 'avgl', 'cavl', 'dsa', 'dsp')
-TraceFunctions = ('none', 'maxh', 'aver', 'avgl')
+def onoff(x):
+    if type(x) is str:
+        return x.upper() in ('1', 'ON')
+    elif type(x) is bool:
+        return '1' if x else '0'
+
+SpurTraceTemplate = ':TRAC%d:SPUR'
+SpurTraceSettings = { 'count': (int, 'COUN'), 'count_enabled': (onoff, 'COUN:ENAB'),
+    'enabled': (onoff, 'ENAB'), 'frozen': (onoff, 'FRE'),
+    'function': (str, 'FUNC'), 'selected': (int, 'SEL'),
+    }
+
+SpurRangeTemplate = ':SPUR:RANG%d'
+SpurRangeSettings = {'video_bandwidth': (float, 'BAND:VID'),
+    'video_bandwidth_enabled': (onoff, 'BAND:VID:STAT'),
+    'detection': (str, 'DET'), 'excursion': (float, 'EXC'),
+    'filter_shape': (str, 'FILT:SHAP'), 'filter_shape_bandwidth': (float, 'FILT:SHAP:BAND'),
+    'filter_shape_bandwidth_auto': (onoff, 'FILT:SHAP:BAND:AUTO'),
+    'frequency_start': (float, 'FREQ:STAR'), 'frequency_stop': (float, 'FREQ:STOP'),
+    'limit_absolute_start': (float, 'LIM:ABS:STAR'), 'limit_absolute_stop': (float, 'LIM:ABS:STOP'),
+    'limit_relative_start': (float, 'LIM:REL:STAR'), 'limit_relative_stop': (float, 'LIM:REL:STOP'),
+    'limit_mask': (str, 'LIM:MASK'), 'state': (onoff, 'STAT'), 'threshold': (float, 'THR')
+    }
+
+SpurPrefix = ':SPUR'
+SpurSettings = {'list': (str, 'LIST'), 'mode': (str, 'MODE'), 'optimization': (str, 'OPT'),
+    'points_count': (str, 'POIN:COUN'), 'reference': (str, 'REF'),
+    'reference_power': (float, 'REF:MAN:POW'),
+    }
+
+SpurCarrierPrefix = ':SPUR:CARR'
+SpurCarrierSettings = {'bandwidth': (float, 'BAND'), 'bandwidth_integration': (float, 'BAND:INT'),
+    'bandwidth_resolution': (float, 'BAND:RES'),
+    'bandwidth_resolution_auto': (onoff, 'BAND:RES:AUTO')
+    }
+
+DisplaySpurPrefix = ':DISP:SPUR'
+DisplaySpurSettings = {'marker_show_state': (onoff, 'MARK:SHOW:STAT'),
+    'scale_log_state': (onoff, 'SCAL:LOG:STAT'),
+    'select_number': (lambda x: round(float(x)), 'SEL:NUMB'),
+    'graticule_grid': (onoff, 'WIND:TRAC:GRAT:GRID:STAT'),
+    'x_start': (float, 'X:STAR'), 'x_stop': (float, 'X:STOP'),
+    'y': (float, 'Y'), 'y_offset': (float, 'Y:OFFS'),
+    }
 
 class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Memory,
         scpi.common.SystemSetup,
@@ -84,7 +131,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._rf_power_span = 0.0
         self._rf_tracking_adjust = 0
         self._alc_source = 'internal'
-        self._range_name = [x for x in iter('ABCDEFGHIJKLMNOPQRST')]
+        self._range_name = (x for x in iter('ABCDEFGHIJKLMNOPQRST'))
+        self._trace_name = [f'Trace {x+1:d}' for x in range(self._trace_count)]
+        self._trace_name.append('Math')
 
         self._identity_description = "Tektronix RSA series IVI spectrum analyzer driver"
         self._identity_identifier = ""
@@ -136,35 +185,23 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('oscillator.locked',
                         self._get_oscillator_locked)
         self._add_property('acquisition.continuous',
-                        self._get_alc_source,
-                        self._set_alc_source)
-        self._add_property('spurious.enabled',
-                        self._get_spurious_enabled,
-                        self._set_spurious_enabled)
+                        self._get_acquisition_continuous,
+                        self._set_acquisition_continuous)
+        self._add_property('spurious.config',
+                        self._get_spurious_config,
+                        self._set_spurious_config)
         self._add_property('spurious.ranges[].config',
-                        self._get_spurious_ranges,
-                        self._set_spurious_ranges)
-        self._add_property('spurious.ranges[].frequency_start',
-                        self._get_spurious_ranges_frequency_start,
-                        self._set_spurious_ranges_frequency_start)
-        self._add_property('spurious.ranges[].limit.absolute_start',
-                        self._get_spurious_ranges_limit_absolute_start,
-                        self._set_spurious_ranges_limit_absolute_start)
-        self._add_property('spurious.traces[].function',
-                        self._get_spurious_ranges_limit_absolute_start,
-                        self._set_spurious_ranges_limit_absolute_start)
-        self._add_property('spurious.traces[].frozen',
-                        self._get_spurious_ranges_limit_absolute_start,
-                        self._set_spurious_ranges_limit_absolute_start)
-        self._add_property('spurious.traces[].enabled',
-                        self._get_spurious_ranges_limit_absolute_start,
-                        self._set_spurious_ranges_limit_absolute_start)
-        self._add_property('spurious.traces[].count',
-                        self._get_spurious_ranges_limit_absolute_start,
-                        self._set_spurious_ranges_limit_absolute_start)
-        self._add_property('spurious.traces[].count_enabled',
-                        self._get_spurious_ranges_limit_absolute_start,
-                        self._set_spurious_ranges_limit_absolute_start)
+                        self._get_spurious_ranges_config,
+                        self._set_spurious_ranges_config)
+        self._add_property('spurious.traces[].config',
+                        self._get_spurious_traces_config,
+                        self._set_spurious_traces_config)
+        self._add_property('spurious.carrier.config',
+                        self._get_spurious_carrier_config,
+                        self._set_spurious_carrier_config)
+        self._add_property('display.spurious.config',
+                        self._get_display_spurious_config,
+                        self._set_display_spurious_config)
 
         # Methods
         self._add_method('display.clear',
@@ -183,23 +220,30 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
                         """))
         self._add_method('rf.tracking_peak',
                         self._rf_tracking_peak)
+        self._add_method('acquisition.abort',
+                        self._acquisition_abort,
+                        ivi.Doc('Reset trigger and stop measurements.'))
+        self._add_method('acquisition.resume',
+                        self._acquisition_resume,
+                        ivi.Doc('Restart signal processing.'))
         self._add_method('acquisition.start',
                         self._acquisition_start,
                         ivi.Doc('Start signal acquisition.'))
         self._add_method('spurious.preset',
                         self._spurious_preset,
-                        ivi.Doc('Start signal acquisition.'))
+                        ivi.Doc('Preset spurious application.'))
         self._add_method('spurious.traces[].count_reset',
-                        self._spurious_preset,
-                        ivi.Doc('Start signal acquisition.'))
-        self._add_method('spurious.fetch.spectrum_x',
-                        self._spurious_preset,
-                        ivi.Doc('Start signal acquisition.'))
-        self._add_method('spurious.fetch.spectrum_y',
-                        self._spurious_preset,
-                        ivi.Doc('Start signal acquisition.'))
+                        self._spurious_traces_count_reset,
+                        ivi.Doc('Clears max hold or average data and counter, restarts process.'))
+        self._add_method('spurious.spectrum_x',
+                        self._fetch_spurious_spectrum_x,
+                        ivi.Doc('Returns frequencies of the spectrum trace.'))
+        self._add_method('spurious.spectrum_y',
+                        self._fetch_spurious_spectrum_y,
+                        ivi.Doc('Returns amplitudes of the spectrum trace.'))
 
 #       self._init_traces()
+        self.spurious.traces._set_list(self._trace_name)
         self.spurious.ranges._set_list(self._range_name)
    
     def _initialize(self, resource=None, id_query=False, reset=False, **kwargs):
@@ -533,51 +577,52 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._set_cache_valid()
         self._alc_source = value
 
-    def _get_spurious_enabled(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            value = self._ask("srcalc?").lower()
-            self._alc_source = [k for k,v in ALCSourceMapping.items() if v==value][0]
-            self._set_cache_valid()
-        return self._alc_source
-
-    def _set_spurious_enabled(self, value):
-        if value not in ALCSourceMapping:
-            raise ivi.ValueNotSupportedException()
+    def _get_config(self, settings, prefix):
         if not self._driver_operation_simulate:
-            self._write("srcalc %s" % ALCSourceMapping[value])
-            self._set_cache_valid()
-        self._alc_source = value
+            return dict([
+                (k, settings[k][0](  # Cast the response appropriately
+                    self._ask(f'{prefix}:{settings[k][1]}?')))
+                        for k in settings])
 
-    def _get_spurious_ranges(self, index):
+    def _set_config(self, settings, prefix, values):
         if not self._driver_operation_simulate:
-            return {}
+            for k in values:
+                if k in settings:
+                    q = settings[k][1]
+                    v = settings[k][0](values[k])  # Cast the setting
+                    self._write(f'{prefix}:{q} {v}')
+                else:
+                    raise ivi.ValueNotSupportedException()
 
-    def _set_spurious_ranges(self, index, value):
-        if not self._driver_operation_simulate:
-            self._write(f"SENS:SPUR:RANG{index+1:d}:FREQ:STAR {value}")
+    def _get_spurious_ranges_config(self, index):
+        return self._get_config(SpurRangeSettings, SpurRangeTemplate % (index+1))
 
-    def _get_spurious_ranges_frequency_start(self, index):
-        if not self._driver_operation_simulate:
-            return self._ask(f"SENS:SPUR:RANG{index+1:d}:FREQ:STAR?").lower()
+    def _set_spurious_ranges_config(self, index, values):
+        return self._set_config(SpurRangeSettings, SpurRangeTemplate % (index+1), values) 
 
-    def _set_spurious_ranges_frequency_start(self, index, value):
-        if not self._driver_operation_simulate:
-            self._write(f"SENS:SPUR:RANG{index+1:d}:FREQ:STAR {value}")
+    def _get_spurious_traces_config(self, index):
+        return self._get_config(SpurTraceSettings, SpurTraceTemplate % (index+1))
 
-    def _get_spurious_ranges_limit_absolute_start(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            value = self._ask("srcalc?").lower()
-            self._alc_source = [k for k,v in ALCSourceMapping.items() if v==value][0]
-            self._set_cache_valid()
-        return self._alc_source
+    def _set_spurious_traces_config(self, index, values):
+        return self._set_config(SpurTraceSettings, SpurTraceTemplate % (index+1), values) 
 
-    def _set_spurious_ranges_limit_absolute_start(self, value):
-        if value not in ALCSourceMapping:
-            raise ivi.ValueNotSupportedException()
-        if not self._driver_operation_simulate:
-            self._write("srcalc %s" % ALCSourceMapping[value])
-            self._set_cache_valid()
-        self._alc_source = value
+    def _get_spurious_carrier_config(self):
+        return self._get_config(SpurCarrierSettings, SpurCarrierPrefix)
+
+    def _set_spurious_carrier_config(self, values):
+        return self._set_config(SpurCarrierSettings, SpurCarrierPrefix, values) 
+
+    def _get_spurious_config(self):
+        return self._get_config(SpurSettings, SpurPrefix)
+
+    def _set_spurious_config(self, index, values):
+        return self._set_config(SpurSettings, SpurPrefix, values) 
+
+    def _get_display_spurious_config(self):
+        return self._get_config(DisplaySpurSettings, DisplaySpurPrefix)
+
+    def _set_display_spurious_config(self, values):
+        return self._set_config(DisplaySpurSettings, DisplaySpurPrefix, values) 
 
     def _get_level_amplitude_units(self):
         if not self._driver_operation_simulate:
@@ -604,12 +649,12 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._write(f'INP:ATT {value}')
    
     def _get_level_attenuation_auto(self):
-        return self._ask('INP:ATT:AUTO?') == '1'
+        return onoff(self._ask('INP:ATT:AUTO?'))
    
     def _set_level_attenuation_auto(self, value):
         value = bool(value)
         if not self._driver_operation_simulate:
-            self._write(f"INP:ATT:AUTO {'1' if value else '0'}")
+            self._write(f"INP:ATT:AUTO {onoff(value)}")
         self._level_attenuation_auto = value
    
     def _get_acquisition_detector_type(self):
@@ -735,16 +780,12 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
    
     def _get_level_reference(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
-            self._level_reference = float(self._ask("INP:RLEVEL?"))
-            self._set_cache_valid()
-        return self._level_reference
+            return float(self._ask('INP:RLEVEL?'))
    
     def _set_level_reference(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
-            self._write("INP:RLEVEL %e" % value)
-        self._level_reference = value
-        self._set_cache_valid()
+            self._write(f'INP:RLEVEL {value:e}')
    
     def _get_level_reference_offset(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
@@ -896,14 +937,31 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _acquisition_abort(self):
         self._write('ABOR')
    
-    def _acquisition_status(self):
-        return 'unknown'
+    def _get_acquisition_continuous(self):
+        return onoff(self._ask('INIT:CONT?'))
+
+    def _set_acquisition_continuous(self, value):
+        self._write(f'INIT:CONT {onoff(value)};*WAI')
 
     def _acquisition_start(self):
-        self._write('INIT:IMM')
+        self._write('INIT:IMM;*WAI')
+
+    def _acquisition_resume(self):
+        self._write('INIT:RES;*WAI')
 
     def _spurious_preset(self):
         self._write('SYST:PRES:APPL SPUR')
+
+    def _spurious_traces_count_reset(self, index):
+        self._write(f'TRAC{index+1:d}:SPUR:COUN:RES')
+
+    def _fetch_spurious_spectrum_x(self):
+        return ivi.np.frombuffer(self._ask_for_ieee_block('FETC:SPUR:SPEC:X?'),
+            dtype=ivi.np.float32)
+   
+    def _fetch_spurious_spectrum_y(self):
+        return ivi.np.frombuffer(self._ask_for_ieee_block('FETC:SPUR:SPEC:Y?'),
+            dtype=ivi.np.float32)
    
     def _trace_fetch_y(self, index):
         index = ivi.get_index(self._trace_name, index)
