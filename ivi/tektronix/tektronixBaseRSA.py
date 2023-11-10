@@ -101,7 +101,7 @@ DisplaySpurSettings = {'marker_show_state': (onoff, 'MARK:SHOW:STAT'),
     'select_number': (lambda x: round(float(x)), 'SEL:NUMB'),
     'graticule_grid': (onoff, 'WIND:TRAC:GRAT:GRID:STAT'),
     'x_start': (float, 'X:STAR'), 'x_stop': (float, 'X:STOP'),
-    'y': (float, 'Y'), 'y_offset': (float, 'Y:OFFS'),
+    'y_range': (float, 'Y'), 'y_offset': (float, 'Y:OFFS'),
     }
 
 class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Memory,
@@ -152,9 +152,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('frequency.span',
                         self._get_frequency_span,
                         self._set_frequency_span)
-        self._add_property('rf.level',
-                        self._get_rf_level,
-                        self._set_rf_level)
+        self._add_property('level.amplitude_units',
+                        self._get_level_amplitude_units,
+                        self._set_level_amplitude_units)
         self._add_property('rf.attenuation',
                         self._get_rf_attenuation,
                         self._set_rf_attenuation)
@@ -625,9 +625,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         return self._set_config(DisplaySpurSettings, DisplaySpurPrefix, values) 
 
     def _get_level_amplitude_units(self):
-        if not self._driver_operation_simulate:
-            self._level_amplitude.units =  self._ask("POW:UNIT?").lower()
-        return self._level_amplitude.units
+        return self._ask("POW:UNIT?").lower()
    
     def _set_level_amplitude_units(self, value):
         value = value.lower()
