@@ -202,6 +202,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('display.spurious.config',
                         self._get_display_spurious_config,
                         self._set_display_spurious_config)
+        self._add_property('spectrum.resolution_bandwidth',
+                        self._get_spectrum_resolution_bandwidth,
+                        self._set_spectrum_resolution_bandwidth)
 
         # Methods
         self._add_method('display.clear',
@@ -244,6 +247,18 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_method('spectrum.preset',
                         self._spectrum_preset,
                         ivi.Doc('Preset spectrum application.'))
+        self._add_method('spectrum.marker_add',
+                        self._spectrum_marker_add,
+                        ivi.Doc('Add marker.'))
+        self._add_method('spectrum.marker_max',
+                        self._spectrum_marker_max,
+                        ivi.Doc('Move marker to max.'))
+        self._add_method('spectrum.marker_x',
+                        self._spectrum_marker_x,
+                        ivi.Doc('Measure marker frequency.'))
+        self._add_method('spectrum.marker_y',
+                        self._spectrum_marker_y,
+                        ivi.Doc('Measure marker amplitude.'))
 
 #       self._init_traces()
         self.spurious.traces._set_list(self._trace_name)
@@ -718,39 +733,27 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
 
     def _get_frequency_center(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
-            self._frequency_center = float(self._ask("cf?"))
+            self._frequency_center = float(self._ask(":SPEC:FREQ:CENT?"))
             self._set_cache_valid()
         return self._frequency_center
 
     def _set_frequency_center(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
-            self._write("cf %f hz" % value)
+            self._write(":SPEC:FREQ:CENT %f" % value)
         self._frequency_center = value
-        self._set_cache_valid()
-        self._set_cache_valid(False, 'frequency_start')
-        self._set_cache_valid(False, 'frequency_stop')
-        self._set_cache_valid(False, 'sweep_coupling_resolution_bandwidth')
-        self._set_cache_valid(False, 'sweep_coupling_sweep_time')
-        self._set_cache_valid(False, 'sweep_coupling_video_bandwidth')
 
     def _get_frequency_span(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
-            self._frequency_span = float(self._ask("sp?"))
+            self._frequency_span = float(self._ask(":SPEC:FREQ:SPAN?"))
             self._set_cache_valid()
         return self._frequency_span
 
     def _set_frequency_span(self, value):
         value = float(value)
         if not self._driver_operation_simulate:
-            self._write("sp %f hz" % value)
+            self._write(":SPEC:FREQ:SPAN %f" % value)
         self._frequency_span = value
-        self._set_cache_valid()
-        self._set_cache_valid(False, 'frequency_start')
-        self._set_cache_valid(False, 'frequency_stop')
-        self._set_cache_valid(False, 'sweep_coupling_resolution_bandwidth')
-        self._set_cache_valid(False, 'sweep_coupling_sweep_time')
-        self._set_cache_valid(False, 'sweep_coupling_video_bandwidth')
    
     def _get_frequency_offset(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
@@ -764,6 +767,17 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._write("foffset %e hz" % value)
         self._frequency_offset = value
         self._set_cache_valid()
+
+    def _get_spectrum_resolution_bandwidth(self):
+        if not self._driver_operation_simulate:
+            self._spectrum_resolution_bandwith = float(self._ask(":SPEC:BAND:RES?"))
+        return self._spectrum_resolution_bandwith
+
+    def _set_spectrum_resolution_bandwidth(self, value):
+        value = float(value)
+        if not self._driver_operation_simulate:
+            self._write(":SPEC:BAND:RES %f" % value)
+        self._spectrum_resolution_bandwidth = value
    
     def _get_level_input_impedance(self):
         return self._level_input_impedance
@@ -927,8 +941,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         return self._ask('ROSC:SOUR?').lower()
 
     def _set_oscillator_source(self, value):
-        if value.lower() in OscillatorSources:
-            self._write(f'ROSC:SOUR {value.upper()}')
+        value = value.upper()
+        if value in OscillatorSources:
+            self._write(f'ROSC:SOUR {value}')
         else:
             raise ivi.ValueNotSupportedException()
 
@@ -955,6 +970,18 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
 
     def _spectrum_preset(self):
         self._write('SYST:PRES:APPL SPEC')
+
+    def _spectrum_marker_add(self):
+        self._write('CALC:MARK:ADD')
+
+    def _spectrum_marker_max(self):
+        self._write('CALC:SPEC:MARK0:MAX')
+
+    def _spectrum_marker_x(self):
+        return float(self._ask('CALC:SPEC:MARK0:X?'))
+
+    def _spectrum_marker_y(self):
+        return float(self._ask('CALC:SPEC:MARK0:Y?'))
 
     def _spurious_traces_count_reset(self, index):
         self._write(f'TRAC{index+1:d}:SPUR:COUN:RES')
