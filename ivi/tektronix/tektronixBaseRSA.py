@@ -241,6 +241,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_method('spurious.spectrum_y',
                         self._fetch_spurious_spectrum_y,
                         ivi.Doc('Returns amplitudes of the spectrum trace.'))
+        self._add_method('spectrum.preset',
+                        self._spectrum_preset,
+                        ivi.Doc('Preset spectrum application.'))
 
 #       self._init_traces()
         self.spurious.traces._set_list(self._trace_name)
@@ -949,6 +952,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
 
     def _spurious_preset(self):
         self._write('SYST:PRES:APPL SPUR')
+
+    def _spectrum_preset(self):
+        self._write('SYST:PRES:APPL SPEC')
 
     def _spurious_traces_count_reset(self, index):
         self._write(f'TRAC{index+1:d}:SPUR:COUN:RES')
