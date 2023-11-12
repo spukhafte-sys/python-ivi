@@ -95,6 +95,11 @@ SpurCarrierSettings = {'bandwidth': (float, 'BAND'), 'bandwidth_integration': (f
     'bandwidth_resolution_auto': (onoff, 'BAND:RES:AUTO')
     }
 
+SpecPrefix = ':SPEC'
+SpecSettings = {'start': (float, 'FREQ:STAR'), 'stop': (float, 'FREQ:STOP'),
+        'step': (float, 'FREQ:STEP'), 'points_count': (str, 'POIN:COUN'),
+    }
+
 DisplaySpurPrefix = ':DISP:SPUR'
 DisplaySpurSettings = {'marker_show_state': (onoff, 'MARK:SHOW:STAT'),
     'scale_log_state': (onoff, 'SCAL:LOG:STAT'),
@@ -202,6 +207,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('display.spurious.config',
                         self._get_display_spurious_config,
                         self._set_display_spurious_config)
+        self._add_property('spectrum.config',
+                        self._get_spectrum_config,
+                        self._set_spectrum_config)
         self._add_property('spectrum.resolution_bandwidth',
                         self._get_spectrum_resolution_bandwidth,
                         self._set_spectrum_resolution_bandwidth)
@@ -767,6 +775,12 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
             self._write("foffset %e hz" % value)
         self._frequency_offset = value
         self._set_cache_valid()
+
+    def _get_spectrum_config(self):
+        return self._get_config(SpecSettings, SpecPrefix)
+
+    def _set_spectrum_config(self, index, values):
+        return self._set_config(SpecSettings, SpecPrefix, values) 
 
     def _get_spectrum_resolution_bandwidth(self):
         if not self._driver_operation_simulate:
