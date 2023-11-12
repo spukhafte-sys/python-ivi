@@ -641,7 +641,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _get_spurious_config(self):
         return self._get_config(SpurSettings, SpurPrefix)
 
-    def _set_spurious_config(self, index, values):
+    def _set_spurious_config(self, values):
         return self._set_config(SpurSettings, SpurPrefix, values) 
 
     def _get_display_spurious_config(self):
@@ -779,7 +779,7 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
     def _get_spectrum_config(self):
         return self._get_config(SpecSettings, SpecPrefix)
 
-    def _set_spectrum_config(self, index, values):
+    def _set_spectrum_config(self, values):
         return self._set_config(SpecSettings, SpecPrefix, values) 
 
     def _get_spectrum_resolution_bandwidth(self):
