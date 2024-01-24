@@ -703,28 +703,9 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         value = bool(value)
         self._acquisition_detector_type_auto = value
 
-    def _get_frequency_stop(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
-            self._frequency_stop = float(self._ask("fb?"))
-            self._set_cache_valid()
-        return self._frequency_stop
-   
-    def _set_frequency_stop(self, value):
-        value = float(value)
-        if not self._driver_operation_simulate:
-            self._write("fb %f hz" % value)
-        self._frequency_stop = value
-        self._set_cache_valid()
-        self._set_cache_valid(False, 'frequency_center')
-        self._set_cache_valid(False, 'frequency_span')
-        self._set_cache_valid(False, 'sweep_coupling_resolution_bandwidth')
-        self._set_cache_valid(False, 'sweep_coupling_sweep_time')
-        self._set_cache_valid(False, 'sweep_coupling_video_bandwidth')
-
     def _get_frequency_center(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             self._frequency_center = float(self._ask(":SPEC:FREQ:CENT?"))
-            self._set_cache_valid()
         return self._frequency_center
 
     def _set_frequency_center(self, value):
@@ -734,9 +715,8 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._frequency_center = value
 
     def _get_frequency_span(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             self._frequency_span = float(self._ask(":SPEC:FREQ:SPAN?"))
-            self._set_cache_valid()
         return self._frequency_span
 
     def _set_frequency_span(self, value):
@@ -746,9 +726,8 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._frequency_span = value
    
     def _get_frequency_start(self):
-        if not self._driver_operation_simulate and not self._get_cache_valid():
+        if not self._driver_operation_simulate:
             self._frequency_start = float(self._ask(":SPEC:FREQ:STAR?"))
-            self._set_cache_valid()
         return self._frequency_start
 
     def _set_frequency_start(self, value):
@@ -756,6 +735,17 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         if not self._driver_operation_simulate:
             self._write(":SPEC:FREQ:STAR %f" % value)
         self._frequency_start = value
+
+    def _get_frequency_stop(self):
+        if not self._driver_operation_simulate:
+            self._frequency_stop = float(self._ask(":SPEC:FREQ:STOP?"))
+        return self._frequency_stop
+
+    def _set_frequency_stop(self, value):
+        value = float(value)
+        if not self._driver_operation_simulate:
+            self._write(":SPEC:FREQ:STOP %f" % value)
+        self._frequency_stop = value
 
     def _get_frequency_offset(self):
         if not self._driver_operation_simulate and not self._get_cache_valid():
