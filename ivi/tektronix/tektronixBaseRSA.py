@@ -213,6 +213,12 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         self._add_property('spectrum.resolution_bandwidth',
                         self._get_spectrum_resolution_bandwidth,
                         self._set_spectrum_resolution_bandwidth)
+        self._add_property('trigger.event.input.level',
+                        self._get_trigger_event_input_level,
+                        self._set_trigger_event_input_level)
+        self._add_property('trigger.status',
+                        self._get_trigger_status,
+                        self._set_trigger_status)
 
         # Methods
         self._add_method('display.clear',
@@ -776,6 +782,26 @@ class tektronixBaseRSA(scpi.common.IdnCommand, scpi.common.Reset, scpi.common.Me
         if not self._driver_operation_simulate:
             self._write(":SPEC:BAND:RES %f" % value)
         self._spectrum_resolution_bandwidth = value
+
+    def _get_trigger_event_input_level(self):
+        if not self._driver_operation_simulate:
+            self._trigger_event_input_level = float(self._ask(":TRIG:EVEN:INP:LEV?"))
+        return self._trigger_event_input_level
+
+    def _set_trigger_event_input_level(self, value):
+        value = float(value)
+        if not self._driver_operation_simulate:
+            self._write(":TRIG:EVEN:INP:LEV %f" % value)
+        self._trigger_event_input_level = value
+   
+    def _get_trigger_status(self):
+        return onoff(self._ask('TRIG:STAT?'))
+   
+    def _set_trigger_status(self, value):
+        value = bool(value)
+        if not self._driver_operation_simulate:
+            self._write(f"TRIG:STAT {onoff(value)}")
+        self._trigger_status = value
    
     def _get_level_input_impedance(self):
         return self._level_input_impedance
