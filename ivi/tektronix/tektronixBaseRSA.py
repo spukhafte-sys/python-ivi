@@ -72,15 +72,18 @@ SpurTraceSettings = { 'count': (int, 'COUN'), 'count_enabled': (onoff, 'COUN:ENA
     }
 
 SpurRangeTemplate = ':SPUR:RANG%d'
-SpurRangeSettings = {'video_bandwidth': (float, 'BAND:VID'),
-    'video_bandwidth_enabled': (onoff, 'BAND:VID:STAT'),
-    'detection': (str, 'DET'), 'excursion': (float, 'EXC'),
+SpurRangeSettings = {
+    'state': (onoff, 'STAT'),
+    'frequency_start': (float, 'FREQ:STAR'), 'frequency_stop': (float, 'FREQ:STOP'),
     'filter_shape': (str, 'FILT:SHAP'), 'filter_shape_bandwidth': (float, 'FILT:SHAP:BAND'),
     'filter_shape_bandwidth_auto': (onoff, 'FILT:SHAP:BAND:AUTO'),
-    'frequency_start': (float, 'FREQ:STAR'), 'frequency_stop': (float, 'FREQ:STOP'),
+    'detection': (str, 'DET'),
+    'video_bandwidth': (float, 'BAND:VID'),
+    'video_bandwidth_enabled': (onoff, 'BAND:VID:STAT'),
+    'threshold': (float, 'THR'), 'excursion': (float, 'EXC'),
+    'limit_mask': (str, 'LIM:MASK'),
     'limit_absolute_start': (float, 'LIM:ABS:STAR'), 'limit_absolute_stop': (float, 'LIM:ABS:STOP'),
     'limit_relative_start': (float, 'LIM:REL:STAR'), 'limit_relative_stop': (float, 'LIM:REL:STOP'),
-    'limit_mask': (str, 'LIM:MASK'), 'state': (onoff, 'STAT'), 'threshold': (float, 'THR')
     }
 
 SpurPrefix = ':SPUR'
