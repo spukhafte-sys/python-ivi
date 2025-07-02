@@ -274,4 +274,8 @@ from .agilent86146B import agilent86146B
 # Optical attenuators
 from .agilent8156A import agilent8156A
 
-
+# Switches
+#from .agilent44470 import agilent44470
+#from .agilent44471 import agilent44471
+#from .agilent44472 import agilent44472
+from .agilent3499A import agilent3499A
