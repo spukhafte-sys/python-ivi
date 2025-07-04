@@ -279,3 +279,5 @@ from .agilent8156A import agilent8156A
 #from .agilent44471 import agilent44471
 #from .agilent44472 import agilent44472
 from .agilent3499A import agilent3499A
+from .agilent3499B import agilent3499B
+from .agilent3499C import agilent3499C

@@ -312,6 +312,11 @@ class Base(ivi.IviContainer):
                         
                         For example, this attribute returns 2 if the channel has two conductors.
                         """, cls, grp, '4.2.20'))
+        self._add_method('channels[].close',
+                        self._channel_close,
+                        '''
+                        Close channel.
+                        ''')
         self._add_method('path.can_connect',
                         self._path_can_connect,
                         ivi.Doc("""
@@ -556,6 +561,8 @@ class Base(ivi.IviContainer):
         
         self.channels._set_list(self._channel_name)
     
+    def _channel_close(self, index):
+        print('success')
     
     def _get_channel_characteristics_ac_current_carry_max(self, index):
         index = ivi.get_index(self._channel_name, index)

@@ -3,6 +3,7 @@
 Python Interchangeable Virtual Instrument Library
 
 Copyright (c) 2012-2017 Alex Forencich
+Copyright (c) 2025 Fred Fierling
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +25,8 @@ THE SOFTWARE.
 
 """
 
-import time
-import struct
+#import time
+#import struct
 
 from .. import ivi
 from .. import swtch
@@ -70,22 +71,19 @@ MeasurementResolutionMapping = {
 class agilent3499A(scpi.swtch.Base):
     "Agilent 3499A IVI Switch Driver"
 
-    SLOT_COUNT = 2
+    SLOT_COUNT = 5
     
-    def __init__(self, resource, *args, cache=False, **kwargs):
+    def __init__(self, *args, cache=False, **kwargs):
         if cache:
             raise InvalidOptionValueException('Cache not supported by driver (use cache=False)')
 
-        self.__dict__.setdefault('_instrument_id', '3499')  # TODO
+        if not hasattr(self, '_instrument_id'):
+            self._instrument_id = '3499'
         
-        super().__init__(resource, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         self._memory_size = 5
 
-        if len(args) > self.SLOT_COUNT:
-            raise NotInitializedException("Controller only supports %d option cards",
-                self._slot_count)
-        
         self._identity_description = "Agilent 3499A IVI Switch Driver"
         self._identity_identifier = ""
         self._identity_revision = ""
@@ -96,7 +94,7 @@ class agilent3499A(scpi.swtch.Base):
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['3499A']
-    
+
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
         
