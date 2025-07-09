@@ -62,6 +62,7 @@ _V_CONSTANT = 'VOLT'
 _V_RANGE = 'VOLT:RANG'
 _V_ON = 'VOLT:ON'
 _V_OFF = 'VOLT:OFF'
+_V_SENSE = 'SYST:SENS'
 _I_CONSTANT = 'CURR'
 _I_RANGE = 'CURR:RANG'
 _I_SLEW = 'CURR:SLEW'
@@ -228,6 +229,12 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset,
 
     def _set_voltage_off(self, value):
         return self._set_value(_V_OFF, value)
+
+    def _get_voltage_sense(self):
+        return self._get_bool(_V_SENSE)
+
+    def _set_voltage_sense(self, value):
+        return self._set_bool(_V_SENSE, value)
 
     def _get_current_constant(self):
         return self._get_value(_I_CONSTANT)

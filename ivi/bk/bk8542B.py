@@ -30,17 +30,7 @@ import struct
 
 from .. import ivi
 from .. import scpi
-'''
-MeasurementRangeMapping = {
-        'dc_volts': 'volt:dc:range',
-        'dc_current': 'curr:dc:range',
-        }
 
-MeasurementAutoRangeMapping = {
-        'dc_volts': 'volt:dc:range:auto',
-        'dc_current': 'curr:dc:range:auto',
-        }
-'''
 class bk8542B(scpi.load.Base):
     "B&K Precision 8542BA single-channel electronic load driver"
     

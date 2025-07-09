@@ -25,9 +25,9 @@ THE SOFTWARE.
 
 """
 
-from .agilent3499A import *
+from .agilentBaseSwitch import *
 
-class agilent3499B(agilent3499A):
+class agilent3499B(agilentBaseSwitch):
     "Agilent 3499B IVI Switch Driver"
 
     SLOT_COUNT = 2

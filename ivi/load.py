@@ -53,6 +53,7 @@ class Base(ivi.IviContainer):
         self._channel_voltage_range = []
         self._channel_voltage_on = []
         self._channel_voltage_off = []
+        self._channel_voltage_sense = []
         self._channel_current_constant = []
         self._channel_current_range = []
         self._channel_current_slew = []
@@ -144,6 +145,13 @@ class Base(ivi.IviContainer):
             None,
             ivi.Doc("""
             Disable load at or below this voltage. (V)
+            """))
+        self._add_property('voltage.sense',
+            self._get_voltage_sense,
+            self._set_voltage_sense,
+            None,
+            ivi.Doc("""
+            Remote voltage sense mode.
             """))
         self._add_property('current.constant',
             self._get_current_constant,
@@ -282,6 +290,7 @@ class Base(ivi.IviContainer):
             self._channel_voltage_range.append(0)
             self._channel_voltage_on.append(0.1)
             self._channel_voltage_off.append(0)
+            self._channel_voltage_sense.append(False)
             self._channel_current_constant.append(0)
             self._channel_current_range.append(0)
             self._channel_current_slew.append(0)
@@ -361,6 +370,12 @@ class Base(ivi.IviContainer):
 
     def _set_voltage_off(self, value):
         self._channel_voltage_off[self._channel] = float(value)
+
+    def _get_voltage_sense(self):
+        return self._channel_voltage_sense[self._channel]
+
+    def _set_voltage_sense(self, value):
+        self._channel_voltage_sense[self._channel] = bool(value)
 
     def _get_current_constant(self):
         return self._channel_current_constant[self._channel]

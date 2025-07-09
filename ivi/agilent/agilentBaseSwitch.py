@@ -25,42 +25,63 @@ THE SOFTWARE.
 
 """
 
-import math
+#import time
+#import struct
 
 from .. import ivi
 from .. import swtch
-from . import common
+from .. import scpi
 
-class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
-           ivi.Driver,
-           swtch.Base):
-    "Generic SCPI IVI Switch driver"
+MeasurementFunctionMapping = {
+        'dc_volts': 'volt',
+        'ac_volts': 'volt:ac',
+        'dc_current': 'curr',
+        'ac_current': 'curr:ac',
+        'continuity': 'cont',
+        'diode': 'diod'}
+
+class agilentBaseSwitch(scpi.swtch.Base):
+    """Agilent IVI Switch Driver
     
-    def __init__(self, *args, **kwargs):
-        self.__dict__.setdefault('_instrument_id', '')
-        
-        # early define of _do_scpi_init
-        self.__dict__.setdefault('_do_scpi_init', True)
-        
-        super(Base, self).__init__(*args, **kwargs)
+       Parent class for all Agilent SCPI switches
+    """
 
-        self._self_test_delay = 40
+    SLOT_COUNT = 5
+    CONTROL_SLOT_COUNT = 1
+    
+    def __init__(self, *args, cache=False, **kwargs):
+        if cache:
+            raise InvalidOptionValueException('Cache not supported by driver (use cache=False)')
+
+        if not hasattr(self, '_instrument_id'):
+            self._instrument_id = '3499'
         
-        self._identity_description = "Generic SCPI IVI Switch driver"
+        super().__init__(*args, **kwargs)
+        
+        self._channel_count = 101
+        self._memory_size = 5
+
+        self._identity_description = "Agilent 3499 IVI Switch Driver"
         self._identity_identifier = ""
         self._identity_revision = ""
         self._identity_vendor = ""
-        self._identity_instrument_manufacturer = ""
+        self._identity_instrument_manufacturer = "Agilent Technologies, Inc."
         self._identity_instrument_model = ""
         self._identity_instrument_firmware_revision = ""
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
-        self._identity_supported_instrument_models = ['SWTCH']
-    
+        self._identity_supported_instrument_models = ['3499A', '3499B', '3499C']
+
+        self._add_method('channels[].relay_control',
+                         self._channels_relay_control,
+                         '''
+                         Control individual relays
+                         ''')
+
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
         
-        super(Base, self)._initialize(resource, id_query, reset, **keywargs)
+        super()._initialize(resource, id_query, reset, **keywargs)
         
         # interface clear
         if not self._driver_operation_simulate:
@@ -77,3 +98,15 @@ class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
         # reset
         if reset:
             self.utility.reset()
+
+    def _channels_relay_control(self, index, action):
+        self._write('clos' if action else 'open' + f' (@{index:d})')
+
+    def relay(self, num, action):
+        count = 2
+        start = (1 + ((num>>2) & 1))*100 + (num &0b11)*2
+        self._write(f"rout:{'clos' if action else 'open'}"
+                    f" (@{','.join(str(i) for i in range(start, start+count))})")
+
+    def open_relays(self):
+        self._write('rout:open all')
