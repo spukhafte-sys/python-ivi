@@ -29,9 +29,11 @@ import math
 
 from .. import ivi
 from .. import swtch
+from .. import extra
 from . import common
 
 class Base(common.IdnCommand, common.ErrorQuery, common.Reset, common.SelfTest,
+           extra.common.Title,
            ivi.Driver,
            swtch.Base):
     "Generic SCPI IVI Switch driver"

@@ -99,6 +99,14 @@ class agilentBaseSwitch(scpi.swtch.Base):
         if reset:
             self.utility.reset()
 
+    def _get_display_title(self):
+        return (self._display_title)
+
+    def _set_display_title(self, value):
+        self._display_title = str(value).upper()
+        if not self._driver_operation_simulate:
+            self._write(f'diag:disp:info "{self._display_title}"')
+
     def _channels_relay_control(self, index, action):
         self._write('clos' if action else 'open' + f' (@{index:d})')
 
