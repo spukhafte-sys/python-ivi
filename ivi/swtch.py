@@ -508,55 +508,6 @@ class Base(ivi.IviContainer):
                         returns the Max Time Exceeded error.
                         """, cls, grp, '4.3.9'))
         
-        self._init_channels()
-    
-    
-    
-    def _init_channels(self):
-        try:
-            super(Base, self)._init_channels()
-        except AttributeError:
-            pass
-        
-        self._channel_name = list()
-        self._channel_characteristics_ac_current_carry_max = list()
-        self._channel_characteristics_ac_current_switching_max = list()
-        self._channel_characteristics_ac_power_carry_max = list()
-        self._channel_characteristics_ac_power_switching_max = list()
-        self._channel_characteristics_ac_voltage_max = list()
-        self._channel_characteristics_bandwidth = list()
-        self._channel_characteristics_impedance = list()
-        self._channel_characteristics_dc_current_carry_max = list()
-        self._channel_characteristics_dc_current_switching_max = list()
-        self._channel_characteristics_dc_power_carry_max = list()
-        self._channel_characteristics_dc_power_switching_max = list()
-        self._channel_characteristics_dc_voltage_max = list()
-        self._channel_is_configuration_channel = list()
-        self._channel_is_source_channel = list()
-        self._channel_characteristics_settling_time = list()
-        self._channel_characteristics_wire_mode = list()
-
-        for i in range(self._channel_count):
-            self._channel_name.append("channel%d" % (i+1))
-            self._channel_characteristics_ac_current_carry_max.append(0.1)
-            self._channel_characteristics_ac_current_switching_max.append(0.1)
-            self._channel_characteristics_ac_power_carry_max.append(1)
-            self._channel_characteristics_ac_power_switching_max.append(1)
-            self._channel_characteristics_ac_voltage_max.append(100)
-            self._channel_characteristics_bandwidth.append(1e6)
-            self._channel_characteristics_impedance.append(50)
-            self._channel_characteristics_dc_current_carry_max.append(0.1)
-            self._channel_characteristics_dc_current_switching_max.append(0.1)
-            self._channel_characteristics_dc_power_carry_max.append(1)
-            self._channel_characteristics_dc_power_switching_max.append(1)
-            self._channel_characteristics_dc_voltage_max.append(100)
-            self._channel_is_configuration_channel.append(False)
-            self._channel_is_source_channel.append(False)
-            self._channel_characteristics_settling_time.append(0.1)
-            self._channel_characteristics_wire_mode.append(1)
-        
-        self.channels._set_list(self._channel_name)
-    
     def _get_channel_characteristics_ac_current_carry_max(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_characteristics_ac_current_carry_max[index]

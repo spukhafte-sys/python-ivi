@@ -32,7 +32,7 @@ from .. import ivi
 from .. import swtch
 from .. import scpi
 
-MeasurementFunctionMapping = {
+SwitchCommandMapping = {
         'dc_volts': 'volt',
         'ac_volts': 'volt:ac',
         'dc_current': 'curr',
@@ -40,14 +40,26 @@ MeasurementFunctionMapping = {
         'continuity': 'cont',
         'diode': 'diod'}
 
+class agilent44471:
+    @classmethod
+    def init(cls, count=10):
+        cls._channel_name = list()
+
+
+OptionCardMapping = {
+        'BUILD-IN DIO 3499': {'CHANNELS': 4, 'GROUPS': 1},
+        'RELAY MUX 44470': {'CHANNELS': 10, 'GROUPS': 1},
+        'GP RELAY 44471': {'CHANNELS': 10, 'GROUPS': 1},
+        'VHF SWITCH 44472': {'CHANNELS': 4, 'GROUPS': 2},
+        }
+
 class agilentBaseSwitch(scpi.swtch.Base):
     """Agilent IVI Switch Driver
     
        Parent class for all Agilent SCPI switches
     """
 
-    SLOT_COUNT = 5
-    CONTROL_SLOT_COUNT = 1
+    BUILT_IN_DIO_COUNT = 1
     
     def __init__(self, *args, cache=False, **kwargs):
         if cache:
@@ -72,8 +84,8 @@ class agilentBaseSwitch(scpi.swtch.Base):
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['3499A', '3499B', '3499C']
 
-        self._add_method('channels[].relay_control',
-                         self._channels_relay_control,
+        self._add_method('relay',
+                         self._relay,
                          '''
                          Control individual relays
                          ''')
@@ -81,6 +93,8 @@ class agilentBaseSwitch(scpi.swtch.Base):
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
         
+        # The initialize() method is added and called at the end of ivi.py/Driver/__init__()
+        # and points to (this) _initialize()
         super()._initialize(resource, id_query, reset, **keywargs)
         
         # interface clear
@@ -99,6 +113,62 @@ class agilentBaseSwitch(scpi.swtch.Base):
         if reset:
             self.utility.reset()
 
+
+    def _init_channels(self):
+        '''
+        try:
+            super(Base, self)._init_channels()
+        except AttributeError:
+            pass
+        '''
+
+        self._channel_name = list()
+        self._channel_characteristics_ac_current_carry_max = list()
+        self._channel_characteristics_ac_current_switching_max = list()
+        self._channel_characteristics_ac_power_carry_max = list()
+        self._channel_characteristics_ac_power_switching_max = list()
+        self._channel_characteristics_ac_voltage_max = list()
+        self._channel_characteristics_bandwidth = list()
+        self._channel_characteristics_impedance = list()
+        self._channel_characteristics_dc_current_carry_max = list()
+        self._channel_characteristics_dc_current_switching_max = list()
+        self._channel_characteristics_dc_power_carry_max = list()
+        self._channel_characteristics_dc_power_switching_max = list()
+        self._channel_characteristics_dc_voltage_max = list()
+        self._channel_is_configuration_channel = list()
+        self._channel_is_source_channel = list()
+        self._channel_characteristics_settling_time = list()
+        self._channel_characteristics_wire_mode = list()
+
+        # Initialize option cards
+        self._slots = list()
+        for i in range(0, self.BUILT_IN_DIO_COUNT + self.SLOT_COUNT):
+            card_info = self._ask(f'syst:ctyp? {i:d}').split(',')
+            card_type = ' '.join(card_info[0].split())
+            if card_type in OptionCardMapping:
+                self._slots.append(card_type)
+
+        for i in range(self._channel_count):
+            self._channel_name.append(f'CH{i:02d}')
+            self._channel_characteristics_ac_current_carry_max.append(0.1)
+            self._channel_characteristics_ac_current_switching_max.append(0.1)
+            self._channel_characteristics_ac_power_carry_max.append(1)
+            self._channel_characteristics_ac_power_switching_max.append(1)
+            self._channel_characteristics_ac_voltage_max.append(100)
+            self._channel_characteristics_bandwidth.append(1e6)
+            self._channel_characteristics_impedance.append(50)
+            self._channel_characteristics_dc_current_carry_max.append(0.1)
+            self._channel_characteristics_dc_current_switching_max.append(0.1)
+            self._channel_characteristics_dc_power_carry_max.append(1)
+            self._channel_characteristics_dc_power_switching_max.append(1)
+            self._channel_characteristics_dc_voltage_max.append(100)
+            self._channel_is_configuration_channel.append(False)
+            self._channel_is_source_channel.append(False)
+            self._channel_characteristics_settling_time.append(0.1)
+            self._channel_characteristics_wire_mode.append(1)
+
+        self.channels._set_list(self._channel_name)
+
     def _get_display_title(self):
         return (self._display_title)
 
@@ -107,8 +177,11 @@ class agilentBaseSwitch(scpi.swtch.Base):
         if not self._driver_operation_simulate:
             self._write(f'diag:disp:info "{self._display_title}"')
 
-    def _channels_relay_control(self, index, action):
+    def _slots_channels_test(self, index, action):
         self._write('clos' if action else 'open' + f' (@{index:d})')
+
+    def _relay(self, index, action):
+        self._write('rout:' + ('clos' if action else 'open') + f' (@{index:d})')
 
     def relay(self, num, action):
         count = 2
