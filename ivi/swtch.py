@@ -47,6 +47,7 @@ class DiscontinuousPathException(ivi.IviException): pass
 class CannotConnectDirectlyException(ivi.IviException): pass
 class ChannelsAlreadyConnectedException(ivi.IviException): pass
 class CannotConnectToItselfException(ivi.IviException): pass
+class InvalidChannelNameException(ivi.IviException): pass
 
 # Parameter Values
 ScanMode = set(['none', 'break_before_make', 'break_after_make'])
@@ -84,7 +85,11 @@ class Base(ivi.IviContainer):
         self._channel_is_source_channel = list()
         self._channel_characteristics_settling_time = list()
         self._channel_characteristics_wire_mode = list()
+
         self._path_is_debounced = False
+
+        self._dio_name = list()
+        self._dio_characteristics_mode = list()
         
         self._add_property('channels[].characteristics.ac_current_carry_max',
                         self._get_channel_characteristics_ac_current_carry_max,
@@ -166,6 +171,19 @@ class Base(ivi.IviContainer):
                         of the Channel Count, the attribute returns an empty string for the value
                         and returns an error.
                         """, cls, grp, '4.2.9'))
+        self._add_property('channels[].address',
+                        self._get_channel_address,
+                        None,
+                        None,
+                        """
+                        This attribute returns the physical address defined by the
+                        specific driver for the Channel that corresponds to the one-based index
+                        that the user specifies. If the driver defines a qualified channel name,
+                        this property returns the qualified name. If the value that the user
+                        passes for the Index parameter is less than one or greater than the value
+                        of the Channel Count, the attribute returns an empty string for the value
+                        and returns an error.
+                        """)
         self._add_property('channels[].characteristics.impedance',
                         self._get_channel_characteristics_impedance,
                         None,
@@ -507,6 +525,19 @@ class Base(ivi.IviContainer):
                         period the user specified with the maximum_time parameter, the function
                         returns the Max Time Exceeded error.
                         """, cls, grp, '4.3.9'))
+        self._add_property('dios[].name',
+                        self._get_dio_name,
+                        None,
+                        None,
+                        """
+                        This attribute returns the physical name identifier defined by the
+                        specific driver for the digital I/O pin.
+                        """)
+        self._add_property('dios[].size',
+                        self._get_dio_size,
+                        None,
+                        None,
+                        """This attribute returns the size in bits of the digital I/O.""")
         
     def _get_channel_characteristics_ac_current_carry_max(self, index):
         index = ivi.get_index(self._channel_name, index)
@@ -535,6 +566,10 @@ class Base(ivi.IviContainer):
     def _get_channel_name(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_name[index]
+    
+    def _get_channel_address(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        return self._channel_address[index]
     
     def _get_channel_characteristics_impedance(self, index):
         index = ivi.get_index(self._channel_name, index)
@@ -616,6 +651,14 @@ class Base(ivi.IviContainer):
     
     def _path_wait_for_debounce(self, maximum_time):
         pass
+    
+    def _get_dio_name(self, index):
+        index = ivi.get_index(self._dio_name, index)
+        return self._dio_name[index]
+
+    def _get_dio_size(self, index):
+        index = ivi.get_index(self._dio_name, index)
+        return self._dio_size[index]
     
     
 # Scanner

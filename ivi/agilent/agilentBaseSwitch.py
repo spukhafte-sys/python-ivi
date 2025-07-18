@@ -40,17 +40,48 @@ SwitchCommandMapping = {
         'continuity': 'cont',
         'diode': 'diod'}
 
-class agilent44471:
-    @classmethod
-    def init(cls, count=10):
-        cls._channel_name = list()
+def dio(self, slot):
+    DIOS = ((90,4),
+            (91,1), (92,1), (93,1), (94,1)) 
+
+    for i,j in DIOS:
+        vars(self).setdefault('_dio_name', []).append(f'DIN{slot:d}{i}')
+        vars(self).setdefault('_dio_size', []).append(j)
+
+def agilent44471(self, slot):
+    CHANNEL_COUNT = 10
+
+    SPECS = ( # Static specifications
+                ('_channel_characteristics_ac_current_carry_max', 2),
+                ('_channel_characteristics_ac_current_switching_max', 2),
+                ('_channel_characteristics_ac_power_carry_max', 500),
+                ('_channel_characteristics_ac_power_switching_max', 500),
+                ('_channel_characteristics_ac_voltage_max', 250),
+                ('_channel_characteristics_bandwidth', 10e6),
+                ('_channel_characteristics_impedance', 50),
+                ('_channel_characteristics_dc_current_carry_max', 2),
+                ('_channel_characteristics_dc_current_switching_max', 2),
+                ('_channel_characteristics_dc_power_carry_max', 60),
+                ('_channel_characteristics_dc_power_switching_max', 60),
+                ('_channel_characteristics_dc_voltage_max', 250),
+                ('_channel_is_configuration_channel', False),
+                ('_channel_is_source_channel', False),
+                ('_channel_characteristics_settling_time', 0.1),  # Guessed
+                ('_channel_characteristics_wire_mode', 0),
+               )
+
+    for i in range(CHANNEL_COUNT):
+        channel_address = slot * 100 + i
+        vars(self).setdefault('_channel_name', []).append(f'CH{channel_address}')
+        vars(self).setdefault('_channel_address', []).append(channel_address)
+
+        for j, k in SPECS:
+            vars(self).setdefault(j, []).append(k)
 
 
 OptionCardMapping = {
-        'BUILD-IN DIO 3499': {'CHANNELS': 4, 'GROUPS': 1},
-        'RELAY MUX 44470': {'CHANNELS': 10, 'GROUPS': 1},
-        'GP RELAY 44471': {'CHANNELS': 10, 'GROUPS': 1},
-        'VHF SWITCH 44472': {'CHANNELS': 4, 'GROUPS': 2},
+        'BUILD-IN DIO 3499': dio,
+        'GP RELAY 44471': agilent44471,
         }
 
 class agilentBaseSwitch(scpi.swtch.Base):
@@ -84,11 +115,11 @@ class agilentBaseSwitch(scpi.swtch.Base):
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['3499A', '3499B', '3499C']
 
-        self._add_method('relay',
-                         self._relay,
-                         '''
-                         Control individual relays
-                         ''')
+#       self._add_method('relay',
+#                        self._relay,
+#                        '''
+#                        Control individual relays
+#                        ''')
 
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
@@ -113,60 +144,18 @@ class agilentBaseSwitch(scpi.swtch.Base):
         if reset:
             self.utility.reset()
 
+        self._init_cards()
 
-    def _init_channels(self):
-        '''
-        try:
-            super(Base, self)._init_channels()
-        except AttributeError:
-            pass
-        '''
-
-        self._channel_name = list()
-        self._channel_characteristics_ac_current_carry_max = list()
-        self._channel_characteristics_ac_current_switching_max = list()
-        self._channel_characteristics_ac_power_carry_max = list()
-        self._channel_characteristics_ac_power_switching_max = list()
-        self._channel_characteristics_ac_voltage_max = list()
-        self._channel_characteristics_bandwidth = list()
-        self._channel_characteristics_impedance = list()
-        self._channel_characteristics_dc_current_carry_max = list()
-        self._channel_characteristics_dc_current_switching_max = list()
-        self._channel_characteristics_dc_power_carry_max = list()
-        self._channel_characteristics_dc_power_switching_max = list()
-        self._channel_characteristics_dc_voltage_max = list()
-        self._channel_is_configuration_channel = list()
-        self._channel_is_source_channel = list()
-        self._channel_characteristics_settling_time = list()
-        self._channel_characteristics_wire_mode = list()
-
-        # Initialize option cards
+    def _init_cards(self):
+        # Scan option cards
         self._slots = list()
-        for i in range(0, self.BUILT_IN_DIO_COUNT + self.SLOT_COUNT):
-            card_info = self._ask(f'syst:ctyp? {i:d}').split(',')
-            card_type = ' '.join(card_info[0].split())
+        for slot in range(0, self.BUILT_IN_DIO_COUNT + self.SLOT_COUNT):
+            card_info = self._ask(f'syst:ctyp? {slot:d}').split(',')
+            card_type = ' '.join(card_info[0].split())  # Remove redundant whitespace
             if card_type in OptionCardMapping:
-                self._slots.append(card_type)
+                OptionCardMapping[card_type](self, slot)
 
-        for i in range(self._channel_count):
-            self._channel_name.append(f'CH{i:02d}')
-            self._channel_characteristics_ac_current_carry_max.append(0.1)
-            self._channel_characteristics_ac_current_switching_max.append(0.1)
-            self._channel_characteristics_ac_power_carry_max.append(1)
-            self._channel_characteristics_ac_power_switching_max.append(1)
-            self._channel_characteristics_ac_voltage_max.append(100)
-            self._channel_characteristics_bandwidth.append(1e6)
-            self._channel_characteristics_impedance.append(50)
-            self._channel_characteristics_dc_current_carry_max.append(0.1)
-            self._channel_characteristics_dc_current_switching_max.append(0.1)
-            self._channel_characteristics_dc_power_carry_max.append(1)
-            self._channel_characteristics_dc_power_switching_max.append(1)
-            self._channel_characteristics_dc_voltage_max.append(100)
-            self._channel_is_configuration_channel.append(False)
-            self._channel_is_source_channel.append(False)
-            self._channel_characteristics_settling_time.append(0.1)
-            self._channel_characteristics_wire_mode.append(1)
-
+        self.dios._set_list(self._dio_name)
         self.channels._set_list(self._channel_name)
 
     def _get_display_title(self):
@@ -180,10 +169,32 @@ class agilentBaseSwitch(scpi.swtch.Base):
     def _slots_channels_test(self, index, action):
         self._write('clos' if action else 'open' + f' (@{index:d})')
 
-    def _relay(self, index, action):
-        self._write('rout:' + ('clos' if action else 'open') + f' (@{index:d})')
+    def relay(self, action, *args):
+        clist = ''
+        for i in args:
+            if isinstance(i, str):
+                if '-' in i:
+                    chans = [str(self._channel_address[ivi.get_index(self._channel_name, j)])
+                             for j in i.split('-')]
+                    clist += ':'.join(chans) + ','
+                elif ',' in i:
+                    chans = [str(self._channel_address[ivi.get_index(self._channel_name, j)])
+                             for j in i.split(',')]
+                    clist += ','.join(chans) + ','
+                else:
+                    clist += f'{self._channel_address[ivi.get_index(self._channel_name, i)]:d},'
+            elif isinstance(i, int):
+                clist += f'{self._channel_address[ivi.get_index(self._channel_name, i)]:d},'
+            else:
+                raise SelectorNameException
+        self._write('rout:' + ('clos' if action else 'open') + f' (@{clist});')
 
-    def relay(self, num, action):
+    def _relays(self, index, action):
+        index = ivi.get_index(self._channel_name, index)
+        address = self.channels[index].address
+        self._write('rout:' + ('clos' if action else 'open') + f' (@{address:d})')
+
+    def _relay(self, num, action):
         count = 2
         start = (1 + ((num>>2) & 1))*100 + (num &0b11)*2
         self._write(f"rout:{'clos' if action else 'open'}"
