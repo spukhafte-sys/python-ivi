@@ -115,12 +115,6 @@ class agilentBaseSwitch(scpi.swtch.Base):
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['3499A', '3499B', '3499C']
 
-#       self._add_method('relay',
-#                        self._relay,
-#                        '''
-#                        Control individual relays
-#                        ''')
-
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
         
@@ -166,39 +160,12 @@ class agilentBaseSwitch(scpi.swtch.Base):
         if not self._driver_operation_simulate:
             self._write(f'diag:disp:info "{self._display_title}"')
 
-    def _slots_channels_test(self, index, action):
-        self._write('clos' if action else 'open' + f' (@{index:d})')
-
     def relay(self, action, *args):
         clist = ''
         for i in args:
-            if isinstance(i, str):
-                if '-' in i:
-                    chans = [str(self._channel_address[ivi.get_index(self._channel_name, j)])
-                             for j in i.split('-')]
-                    clist += ':'.join(chans) + ','
-                elif ',' in i:
-                    chans = [str(self._channel_address[ivi.get_index(self._channel_name, j)])
-                             for j in i.split(',')]
-                    clist += ','.join(chans) + ','
-                else:
-                    clist += f'{self._channel_address[ivi.get_index(self._channel_name, i)]:d},'
-            elif isinstance(i, int):
-                clist += f'{self._channel_address[ivi.get_index(self._channel_name, i)]:d},'
+            if isinstance(i, str) or isinstance(i, int):
+                clist += str(self._channel_address[ivi.get_index(self._channel_name, i)]) + ','
             else:
                 raise SelectorNameException
+
         self._write('rout:' + ('clos' if action else 'open') + f' (@{clist});')
-
-    def _relays(self, index, action):
-        index = ivi.get_index(self._channel_name, index)
-        address = self.channels[index].address
-        self._write('rout:' + ('clos' if action else 'open') + f' (@{address:d})')
-
-    def _relay(self, num, action):
-        count = 2
-        start = (1 + ((num>>2) & 1))*100 + (num &0b11)*2
-        self._write(f"rout:{'clos' if action else 'open'}"
-                    f" (@{','.join(str(i) for i in range(start, start+count))})")
-
-    def open_relays(self):
-        self._write('rout:open all')

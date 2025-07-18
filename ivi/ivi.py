@@ -106,7 +106,6 @@ class TriggerNotSoftwareException(IviDriverException): pass
 class UnexpectedResponseException(IviDriverException): pass
 class UnknownOptionException(IviDriverException): pass
 class UnknownPhysicalNameException(IviDriverException): pass
-class ValueNotSupportedException(IviDriverException): pass
 
 
 def get_index(l, i):
