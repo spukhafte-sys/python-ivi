@@ -89,8 +89,8 @@ class Reset(object):
 
     def _utility_reset(self):
         if not self._driver_operation_simulate:
-            self._write("*RST")
             self._clear()
+            self._write("*RST")
             self.driver_operation.invalidate_all_attributes()
 
     def _utility_reset_with_defaults(self):
