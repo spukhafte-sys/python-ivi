@@ -60,7 +60,7 @@ class Base(ivi.IviContainer):
     
     def __init__(self, *args, **kwargs):
         # needed for _init_channels calls from other __init__ methods
-        self._channel_count = 1
+#       self._channel_count = 1
         
         super(Base, self).__init__( *args, **kwargs)
         
@@ -81,16 +81,33 @@ class Base(ivi.IviContainer):
         self._channel_characteristics_dc_power_carry_max = list()
         self._channel_characteristics_dc_power_switching_max = list()
         self._channel_characteristics_dc_voltage_max = list()
-        self._channel_is_configuration_channel = list()
-        self._channel_is_source_channel = list()
         self._channel_characteristics_settling_time = list()
         self._channel_characteristics_wire_mode = list()
+        self._channel_is_configuration_channel = list()
+        self._channel_is_source_channel = list()
+        self._channel_delay = list()
 
         self._path_is_debounced = False
 
         self._dio_name = list()
-        self._dio_characteristics_mode = list()
+#       self._dio_characteristics_mode = list()
+        self._dio_size = list()
+
+        self._ext_name = list()
         
+        self._add_property('channels[].name',
+                        self._get_channel_name,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        This attribute returns the physical name identifier defined by the
+                        specific driver for the Channel that corresponds to the one-based index
+                        that the user specifies. If the driver defines a qualified channel name,
+                        this property returns the qualified name. If the value that the user
+                        passes for the Index parameter is less than one or greater than the value
+                        of the Channel Count, the attribute returns an empty string for the value
+                        and returns an error.
+                        """, cls, grp, '4.2.9'))
         self._add_property('channels[].characteristics.ac_current_carry_max',
                         self._get_channel_characteristics_ac_current_carry_max,
                         None,
@@ -158,32 +175,6 @@ class Base(ivi.IviContainer):
                         take into account the other switches that make up a path to or from this
                         channel.
                         """, cls, grp, '4.2.6'))
-        self._add_property('channels[].name',
-                        self._get_channel_name,
-                        None,
-                        None,
-                        ivi.Doc("""
-                        This attribute returns the physical name identifier defined by the
-                        specific driver for the Channel that corresponds to the one-based index
-                        that the user specifies. If the driver defines a qualified channel name,
-                        this property returns the qualified name. If the value that the user
-                        passes for the Index parameter is less than one or greater than the value
-                        of the Channel Count, the attribute returns an empty string for the value
-                        and returns an error.
-                        """, cls, grp, '4.2.9'))
-        self._add_property('channels[].address',
-                        self._get_channel_address,
-                        None,
-                        None,
-                        """
-                        This attribute returns the physical address defined by the
-                        specific driver for the Channel that corresponds to the one-based index
-                        that the user specifies. If the driver defines a qualified channel name,
-                        this property returns the qualified name. If the value that the user
-                        passes for the Index parameter is less than one or greater than the value
-                        of the Channel Count, the attribute returns an empty string for the value
-                        and returns an error.
-                        """)
         self._add_property('channels[].characteristics.impedance',
                         self._get_channel_characteristics_impedance,
                         None,
@@ -250,58 +241,6 @@ class Base(ivi.IviContainer):
                         take into account the other switches that make up a path to or from this
                         channel.
                         """, cls, grp, '4.2.15'))
-        self._add_property('channels[].is_configuration_channel',
-                        self._get_channel_is_configuration_channel,
-                        self._set_channel_is_configuration_channel,
-                        None,
-                        ivi.Doc("""
-                        Specifies whether the specific driver uses the channel for internal path
-                        creation. If set to True, the channel is no longer accessible to the user
-                        and can be used by the specific driver for path creation. If set to False,
-                        the channel is considered a standard channel and can be explicitly
-                        connected to another channel.
-                        
-                        For example, if the user specifies a column-to-column connection in a
-                        matrix, it typically must use at least one row channel to make the
-                        connection. Specifying a channel as a configuration channel allows the
-                        instrument driver to use it to create the path.
-                        
-                        Notice that once a channel has been configured as a configuration channel,
-                        then no operation can be performed on that channel, except for reading and
-                        writing the Is Configuration Channel attribute.
-                        """, cls, grp, '4.2.16'))
-        self._add_property('path.is_debounced',
-                        self._get_path_is_debounced,
-                        None,
-                        None,
-                        ivi.Doc("""
-                        This attribute indicates whether the switch module has settled from the
-                        switching commands and completed the debounce. If True, the switch module
-                        has settled from the switching commands and completed the debounce. It
-                        indicates that the signal going through the switch module is valid,
-                        assuming that the switches in the path have the correct characteristics.
-                        If False, the switch module has not settled.
-                        """, cls, grp, '4.2.17'))
-        self._add_property('channels[].is_source_channel',
-                        self._get_channel_is_source_channel,
-                        self._set_channel_is_source_channel,
-                        None,
-                        ivi.Doc("""
-                        Allows the user to declare a particular channel as a source channel. If
-                        set to True, the channel is a source channel. If set to False, the channel
-                        is not a source channel.
-                        
-                        If a user ever attempts to connect two channels that are either sources or
-                        have their own connections to sources, the path creation operation returns
-                        an error. Notice that the term source can be from either the instrument or
-                        the UUT perspective. This requires the driver to ensure with each
-                        connection that another connection within the switch module does not
-                        connect to another source.
-                        
-                        The intention of this attribute is to prevent channels from being
-                        connected that may cause damage to the channels, devices, or system.
-                        Notice that GROUND can be considered a source in some circumstances.
-                        """, cls, grp, '4.2.18'))
         self._add_property('channels[].characteristics.settling_time',
                         self._get_channel_characteristics_settling_time,
                         None,
@@ -330,6 +269,89 @@ class Base(ivi.IviContainer):
                         
                         For example, this attribute returns 2 if the channel has two conductors.
                         """, cls, grp, '4.2.20'))
+        self._add_property('channels[].is_configuration_channel',
+                        self._get_channel_is_configuration_channel,
+                        self._set_channel_is_configuration_channel,
+                        None,
+                        ivi.Doc("""
+                        Specifies whether the specific driver uses the channel for internal path
+                        creation. If set to True, the channel is no longer accessible to the user
+                        and can be used by the specific driver for path creation. If set to False,
+                        the channel is considered a standard channel and can be explicitly
+                        connected to another channel.
+                        
+                        For example, if the user specifies a column-to-column connection in a
+                        matrix, it typically must use at least one row channel to make the
+                        connection. Specifying a channel as a configuration channel allows the
+                        instrument driver to use it to create the path.
+                        
+                        Notice that once a channel has been configured as a configuration channel,
+                        then no operation can be performed on that channel, except for reading and
+                        writing the Is Configuration Channel attribute.
+                        """, cls, grp, '4.2.16'))
+        self._add_property('channels[].is_source_channel',
+                        self._get_channel_is_source_channel,
+                        self._set_channel_is_source_channel,
+                        None,
+                        ivi.Doc("""
+                        Allows the user to declare a particular channel as a source channel. If
+                        set to True, the channel is a source channel. If set to False, the channel
+                        is not a source channel.
+                        
+                        If a user ever attempts to connect two channels that are either sources or
+                        have their own connections to sources, the path creation operation returns
+                        an error. Notice that the term source can be from either the instrument or
+                        the UUT perspective. This requires the driver to ensure with each
+                        connection that another connection within the switch module does not
+                        connect to another source.
+                        
+                        The intention of this attribute is to prevent channels from being
+                        connected that may cause damage to the channels, devices, or system.
+                        Notice that GROUND can be considered a source in some circumstances.
+                        """, cls, grp, '4.2.18'))
+        self._add_property('channels[].delay',
+                        self._get_channel_delay,
+                        self._set_channel_delay,
+                        None,
+                        """
+                        This attribute specifies the delay time in seconds (from 0 to 99,999
+                        seconds, 0.001 second resolution), between when a channel in the
+                        scan list is closed and the next operation begins.
+                        
+                        Default: 0
+                        """)
+        self._add_property('path.is_debounced',
+                        self._get_path_is_debounced,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        This attribute indicates whether the switch module has settled from the
+                        switching commands and completed the debounce. If True, the switch module
+                        has settled from the switching commands and completed the debounce. It
+                        indicates that the signal going through the switch module is valid,
+                        assuming that the switches in the path have the correct characteristics.
+                        If False, the switch module has not settled.
+                        """, cls, grp, '4.2.17'))
+        self._add_property('dios[].name',
+                        self._get_dio_name,
+                        None,
+                        None,
+                        """
+                        This attribute returns the physical name identifier defined by the
+                        specific driver for the digital I/O pin.
+                        """)
+        self._add_property('dios[].mode',
+                        self._get_dio_mode,
+                        self._set_dio_mode,
+                        None,
+                        """
+                        """)
+        self._add_property('dios[].size',
+                        self._get_dio_size,
+                        None,
+                        None,
+                        """This attribute returns the size in bits of the digital I/O.""")
+
         self._add_method('path.can_connect',
                         self._path_can_connect,
                         ivi.Doc("""
@@ -525,20 +547,12 @@ class Base(ivi.IviContainer):
                         period the user specified with the maximum_time parameter, the function
                         returns the Max Time Exceeded error.
                         """, cls, grp, '4.3.9'))
-        self._add_property('dios[].name',
-                        self._get_dio_name,
-                        None,
-                        None,
-                        """
-                        This attribute returns the physical name identifier defined by the
-                        specific driver for the digital I/O pin.
-                        """)
-        self._add_property('dios[].size',
-                        self._get_dio_size,
-                        None,
-                        None,
-                        """This attribute returns the size in bits of the digital I/O.""")
+
         
+    def _get_channel_name(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        return self._channel_name[index]
+    
     def _get_channel_characteristics_ac_current_carry_max(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_characteristics_ac_current_carry_max[index]
@@ -562,14 +576,6 @@ class Base(ivi.IviContainer):
     def _get_channel_characteristics_bandwidth(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_characteristics_bandwidth[index]
-    
-    def _get_channel_name(self, index):
-        index = ivi.get_index(self._channel_name, index)
-        return self._channel_name[index]
-    
-    def _get_channel_address(self, index):
-        index = ivi.get_index(self._channel_name, index)
-        return self._channel_address[index]
     
     def _get_channel_characteristics_impedance(self, index):
         index = ivi.get_index(self._channel_name, index)
@@ -595,6 +601,18 @@ class Base(ivi.IviContainer):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_characteristics_dc_voltage_max[index]
     
+    def _get_channel_characteristics_settling_time(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        return self._channel_characteristics_settling_time[index]
+    
+    def _get_channel_characteristics_wire_mode(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        return self._channel_characteristics_wire_mode[index]
+    
+    def _get_channel_characteristics_wire_mode(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        return self._channel_characteristics_delay[index]
+
     def _get_channel_is_configuration_channel(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_is_configuration_channel[index]
@@ -603,10 +621,6 @@ class Base(ivi.IviContainer):
         index = ivi.get_index(self._channel_name, index)
         value = bool(value)
         self._channel_is_configuration_channel[index] = value
-    
-    def _get_path_is_debounced(self, index):
-        index = ivi.get_index(self._channel_name, index)
-        return self._path_is_debounced[index]
     
     def _get_channel_is_source_channel(self, index):
         index = ivi.get_index(self._channel_name, index)
@@ -617,13 +631,38 @@ class Base(ivi.IviContainer):
         value = bool(value)
         self._channel_is_source_channel[index] = value
     
-    def _get_channel_characteristics_settling_time(self, index):
+    def _get_channel_delay(self, index):
         index = ivi.get_index(self._channel_name, index)
-        return self._channel_characteristics_settling_time[index]
+        return self._channel_characteristics_delay[index]
+
+    def _set_channel_delay(self, index, value):
+        index = ivi.get_index(self._channel_name, index)
+        self._channel_delay[index] = float(value)
     
-    def _get_channel_characteristics_wire_mode(self, index):
+    def _get_path_is_debounced(self, index):
         index = ivi.get_index(self._channel_name, index)
-        return self._channel_characteristics_wire_mode[index]
+        return self._path_is_debounced[index]
+
+    def _get_dio_name(self, index):
+        index = ivi.get_index(self._dio_name, index)
+        return self._dio_name[index]
+
+    def _get_dio_mode(self, index):
+        index = ivi.get_index(self._dio_name, index)
+        return self._dio_mode[index]
+    
+    def _set_dio_mode(self, index, value):
+        index = ivi.get_index(self._dio_name, index)
+        self._dio_mode[index] = int(value)
+
+    def _get_dio_size(self, index):
+        index = ivi.get_index(self._dio_name, index)
+        return self._dio_size[index]
+    
+#   def _set_channel_is_source_channel(self, index, value):
+#       index = ivi.get_index(self._channel_name, index)
+#       value = bool(value)
+#       self._channel_is_source_channel[index] = value
     
     def _path_can_connect(self, channel1, channel2):
         channel1 = ivi.get_index(self._channel_name, channel1)

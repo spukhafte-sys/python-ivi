@@ -40,49 +40,97 @@ SwitchCommandMapping = {
         'continuity': 'cont',
         'diode': 'diod'}
 
-def dio(self, slot):
-    DIOS = ((90,4),
-            (91,1), (92,1), (93,1), (94,1)) 
+class dio:
+    def init(self, rack, slot):
+        DIOS = ((90,4),
+                (91,1), (92,1), (93,1), (94,1)) 
 
-    for i,j in DIOS:
-        vars(self).setdefault('_dio_name', []).append(f'DIN{slot:d}{i}')
-        vars(self).setdefault('_dio_size', []).append(j)
+        for i,j in DIOS:
+            vars(rack).setdefault('_dio_name', []).append(f'DIN{slot:d}{i}')
+            vars(rack).setdefault('_dio_size', []).append(j)
 
-def agilent44471(self, slot):
-    CHANNEL_COUNT = 10
+class agilent44470:
+    def init(self, rack, slot):
+        CHANNEL_COUNT = 10
+        COMMON_COUNT = 1
 
-    SPECS = ( # Static specifications
-                ('_channel_characteristics_ac_current_carry_max', 2),
-                ('_channel_characteristics_ac_current_switching_max', 2),
-                ('_channel_characteristics_ac_power_carry_max', 500),
-                ('_channel_characteristics_ac_power_switching_max', 500),
-                ('_channel_characteristics_ac_voltage_max', 250),
-                ('_channel_characteristics_bandwidth', 10e6),
-                ('_channel_characteristics_impedance', 50),
-                ('_channel_characteristics_dc_current_carry_max', 2),
-                ('_channel_characteristics_dc_current_switching_max', 2),
-                ('_channel_characteristics_dc_power_carry_max', 60),
-                ('_channel_characteristics_dc_power_switching_max', 60),
-                ('_channel_characteristics_dc_voltage_max', 250),
-                ('_channel_is_configuration_channel', False),
-                ('_channel_is_source_channel', False),
-                ('_channel_characteristics_settling_time', 0.1),  # Guessed
-                ('_channel_characteristics_wire_mode', 0),
-               )
+        SPECS = ( # Static specifications
+                    ('_channel_characteristics_ac_current_carry_max', 2),
+                    ('_channel_characteristics_ac_current_switching_max', 2),
+                    ('_channel_characteristics_ac_power_carry_max', 500),
+                    ('_channel_characteristics_ac_power_switching_max', 500),
+                    ('_channel_characteristics_ac_voltage_max', 250),
+                    ('_channel_characteristics_bandwidth', 10e6),
+                    ('_channel_characteristics_impedance', 50),
+                    ('_channel_characteristics_dc_current_carry_max', 2),
+                    ('_channel_characteristics_dc_current_switching_max', 2),
+                    ('_channel_characteristics_dc_power_carry_max', 60),
+                    ('_channel_characteristics_dc_power_switching_max', 60),
+                    ('_channel_characteristics_dc_voltage_max', 250),
+                    ('_channel_is_configuration_channel', False),
+                    ('_channel_is_source_channel', False),
+                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
+                    ('_channel_characteristics_wire_mode', 0),
+                    ('_channel_slot', slot),
+                   )
 
-    for i in range(CHANNEL_COUNT):
-        channel_address = slot * 100 + i
-        vars(self).setdefault('_channel_name', []).append(f'CH{channel_address}')
-        vars(self).setdefault('_channel_address', []).append(channel_address)
+        for i in range(CHANNEL_COUNT):
+            channel_address = slot * 100 + i
+            vars(rack).setdefault('_channel_name', []).append(f'CH{channel_address}')
+            vars(rack).setdefault('_channel_address', []).append(channel_address)
+
+            for j, k in SPECS:
+                vars(rack).setdefault(j, []).append(k)
+
+        for i in range(COMMON_COUNT):
+            pass
+
+    def path_connect(self):
+        pass
+
+class agilent44471:
+    @classmethod
+    def init(cls, rack, slot):
+        CHANNEL_COUNT = 10
+
+        SPECS = ( # Static specifications
+                    ('_channel_characteristics_ac_current_carry_max', 2),
+                    ('_channel_characteristics_ac_current_switching_max', 2),
+                    ('_channel_characteristics_ac_power_carry_max', 500),
+                    ('_channel_characteristics_ac_power_switching_max', 500),
+                    ('_channel_characteristics_ac_voltage_max', 250),
+                    ('_channel_characteristics_bandwidth', 10e6),
+                    ('_channel_characteristics_impedance', 50),
+                    ('_channel_characteristics_dc_current_carry_max', 2),
+                    ('_channel_characteristics_dc_current_switching_max', 2),
+                    ('_channel_characteristics_dc_power_carry_max', 60),
+                    ('_channel_characteristics_dc_power_switching_max', 60),
+                    ('_channel_characteristics_dc_voltage_max', 250),
+                    ('_channel_is_configuration_channel', False),
+                    ('_channel_is_source_channel', False),
+                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
+                    ('_channel_characteristics_wire_mode', 0),
+                    ('_channel_slot', slot),
+                   )
+
+        for i in range(CHANNEL_COUNT):
+            channel_address = slot * 100 + i
+            vars(rack).setdefault('_channel_name', []).append(f'CH{channel_address}')
+            vars(rack).setdefault('_channel_address', []).append(channel_address)
 
         for j, k in SPECS:
-            vars(self).setdefault(j, []).append(k)
+            vars(rack).setdefault(j, []).append(k)
+
+    @classmethod
+    def path_connect(cls, channel1, channel2):
+        pass
 
 
 OptionCardMapping = {
         'BUILD-IN DIO 3499': dio,
         'GP RELAY 44471': agilent44471,
         }
+
 
 class agilentBaseSwitch(scpi.swtch.Base):
     """Agilent IVI Switch Driver
@@ -142,15 +190,38 @@ class agilentBaseSwitch(scpi.swtch.Base):
 
     def _init_cards(self):
         # Scan option cards
-        self._slots = list()
+
+        self._slot = list()
+
         for slot in range(0, self.BUILT_IN_DIO_COUNT + self.SLOT_COUNT):
             card_info = self._ask(f'syst:ctyp? {slot:d}').split(',')
             card_type = ' '.join(card_info[0].split())  # Remove redundant whitespace
             if card_type in OptionCardMapping:
-                OptionCardMapping[card_type](self, slot)
+                card = OptionCardMapping[card_type]()  # Instantiate card
+                card.init(self, slot)
+                self._slot.append(card)
 
         self.dios._set_list(self._dio_name)
         self.channels._set_list(self._channel_name)
+
+    def _path_can_connect(self, channel1, channel2):
+        return False
+
+    def _path_connect(self, channel1, channel2):
+        channel1 = ivi.get_index(self._channel_name, channel1)
+        channel2 = ivi.get_index(self._channel_name, channel2)
+
+        slot = self._channel_slot(channel1)
+        if slot != self._channel_slot(channel2):
+            raise swtch.PathNotFoundException
+        else:
+            return self._slot[self.slot].path_connect(self, slot)
+
+    def _path_disconnect(self, channel1, channel2):
+        raise swtch.PathNotFoundException
+
+    def _path_disconnect_all(self, channel1, channel2):
+        raise swtch.PathNotFoundException
 
     def _get_display_title(self):
         return (self._display_title)
