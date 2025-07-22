@@ -50,7 +50,8 @@ class dio:
             vars(rack).setdefault('_dio_size', []).append(j)
 
 class agilent44470:
-    def init(self, rack, slot):
+    @staticmethod
+    def init(rack, slot):
         CHANNEL_COUNT = 10
         COMMON_COUNT = 1
 
@@ -75,22 +76,34 @@ class agilent44470:
                    )
 
         for i in range(CHANNEL_COUNT):
-            channel_address = slot * 100 + i
-            vars(rack).setdefault('_channel_name', []).append(f'CH{channel_address}')
-            vars(rack).setdefault('_channel_address', []).append(channel_address)
+            address = slot * 100 + i
+            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
+            vars(rack).setdefault('_channel_address', []).append(address)
+            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
 
             for j, k in SPECS:
                 vars(rack).setdefault(j, []).append(k)
 
         for i in range(COMMON_COUNT):
-            pass
+            vars(rack).setdefault('_channel_name', []).append(f'COM{address:d}')
+            vars(rack).setdefault('_channel_address', []).append(None)
+            vars(rack).setdefault('_channel_is_common_channel', []).append(True)
 
-    def path_connect(self):
-        pass
+            for j, k in SPECS:
+                vars(rack).setdefault(j, []).append(k)
+
+    @staticmethod
+    def path_connect(rack, *channels):
+        rack.relay(CLOSE, *[i for i in channels if not rack._channels_is_common_channel[i]])
+            
+    @staticmethod
+    def path_disconnect(rack, *channels):
+        rack.relay(OPEN, *[i for i in channels if not rack._channels_is_common_channel[i]])
+            
 
 class agilent44471:
-    @classmethod
-    def init(cls, rack, slot):
+    @staticmethod
+    def init(rack, slot):
         CHANNEL_COUNT = 10
 
         SPECS = ( # Static specifications
@@ -114,16 +127,21 @@ class agilent44471:
                    )
 
         for i in range(CHANNEL_COUNT):
-            channel_address = slot * 100 + i
-            vars(rack).setdefault('_channel_name', []).append(f'CH{channel_address}')
-            vars(rack).setdefault('_channel_address', []).append(channel_address)
+            address = slot * 100 + i
+            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
+            vars(rack).setdefault('_channel_address', []).append(address)
+            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
 
         for j, k in SPECS:
             vars(rack).setdefault(j, []).append(k)
 
-    @classmethod
-    def path_connect(cls, channel1, channel2):
-        pass
+    @staticmethod
+    def path_connect(rack, *channels):
+        raise swtch.PathNotFoundException  # GP relays have no paths
+
+    @staticmethod
+    def path_disconnect(rack, *channels):
+        raise swtch.PathNotFoundException  # GP relays have no paths
 
 
 OptionCardMapping = {
@@ -215,10 +233,17 @@ class agilentBaseSwitch(scpi.swtch.Base):
         if slot != self._channel_slot(channel2):
             raise swtch.PathNotFoundException
         else:
-            return self._slot[self.slot].path_connect(self, slot)
+            return self._slot[slot].path_connect(self, channel1, channel2)
 
     def _path_disconnect(self, channel1, channel2):
-        raise swtch.PathNotFoundException
+        channel1 = ivi.get_index(self._channel_name, channel1)
+        channel2 = ivi.get_index(self._channel_name, channel2)
+
+        slot = self._channel_slot(channel1)
+        if slot != self._channel_slot(channel2):
+            raise swtch.PathNotFoundException
+        else:
+            return self._slot[slot].path_disconnect(self, channel1, channel2)
 
     def _path_disconnect_all(self, channel1, channel2):
         raise swtch.PathNotFoundException

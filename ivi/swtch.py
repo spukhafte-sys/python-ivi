@@ -85,12 +85,12 @@ class Base(ivi.IviContainer):
         self._channel_characteristics_wire_mode = list()
         self._channel_is_configuration_channel = list()
         self._channel_is_source_channel = list()
-        self._channel_delay = list()
+        self._channel_is_common_channel = list()
+        self._channel_scan_delay = list()
 
         self._path_is_debounced = False
 
         self._dio_name = list()
-#       self._dio_characteristics_mode = list()
         self._dio_size = list()
 
         self._ext_name = list()
@@ -309,9 +309,16 @@ class Base(ivi.IviContainer):
                         connected that may cause damage to the channels, devices, or system.
                         Notice that GROUND can be considered a source in some circumstances.
                         """, cls, grp, '4.2.18'))
-        self._add_property('channels[].delay',
-                        self._get_channel_delay,
-                        self._set_channel_delay,
+        self._add_property('channels[].is_common_channel',
+                        self._get_channel_is_common_channel,
+                        None,
+                        None,
+                        """
+                        Channel is a common channel in a 1xN multiplexer.
+                        """)
+        self._add_property('channels[].scan.delay',
+                        self._get_channel_scan_delay,
+                        self._set_channel_scan_delay,
                         None,
                         """
                         This attribute specifies the delay time in seconds (from 0 to 99,999
@@ -609,10 +616,6 @@ class Base(ivi.IviContainer):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_characteristics_wire_mode[index]
     
-    def _get_channel_characteristics_wire_mode(self, index):
-        index = ivi.get_index(self._channel_name, index)
-        return self._channel_characteristics_delay[index]
-
     def _get_channel_is_configuration_channel(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._channel_is_configuration_channel[index]
@@ -630,14 +633,18 @@ class Base(ivi.IviContainer):
         index = ivi.get_index(self._channel_name, index)
         value = bool(value)
         self._channel_is_source_channel[index] = value
-    
-    def _get_channel_delay(self, index):
-        index = ivi.get_index(self._channel_name, index)
-        return self._channel_characteristics_delay[index]
 
-    def _set_channel_delay(self, index, value):
+    def _get_channel_is_common_channel(self, index):
         index = ivi.get_index(self._channel_name, index)
-        self._channel_delay[index] = float(value)
+        return self._channel_is_common_channel[index]
+    
+    def _get_channel_scan_delay(self, index):
+        index = ivi.get_index(self._channel_name, index)
+        return self._channel_scan_delay[index]
+
+    def _set_channel_scan_delay(self, index, value):
+        index = ivi.get_index(self._channel_name, index)
+        self._channel_scan_delay[index] = float(value)
     
     def _get_path_is_debounced(self, index):
         index = ivi.get_index(self._channel_name, index)
@@ -658,11 +665,6 @@ class Base(ivi.IviContainer):
     def _get_dio_size(self, index):
         index = ivi.get_index(self._dio_name, index)
         return self._dio_size[index]
-    
-#   def _set_channel_is_source_channel(self, index, value):
-#       index = ivi.get_index(self._channel_name, index)
-#       value = bool(value)
-#       self._channel_is_source_channel[index] = value
     
     def _path_can_connect(self, channel1, channel2):
         channel1 = ivi.get_index(self._channel_name, channel1)
