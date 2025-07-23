@@ -25,11 +25,10 @@ THE SOFTWARE.
 
 """
 
-from .. import scpi
 from .  import agilentBaseSwitch
 
-class agilent3499B(agilentBaseSwitch, scpi.swtch.Base):
-    "Agilent 3499B IVI Switch Driver"
+class agilent3488A(agilentBaseSwitch):
+    "Agilent 3488A IVI Switch Driver"
 
-    BUILD_IN_DIO = True
-    SLOT_COUNT = 2
+    SLOT_COUNT = 5
+    BUILT_IN_DIO = False

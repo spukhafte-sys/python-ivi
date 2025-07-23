@@ -25,20 +25,9 @@ THE SOFTWARE.
 
 """
 
-#import time
-#import struct
-
 from .. import ivi
 from .. import swtch
-from .. import scpi
-
-SwitchCommandMapping = {
-        'dc_volts': 'volt',
-        'ac_volts': 'volt:ac',
-        'dc_current': 'curr',
-        'ac_current': 'curr:ac',
-        'continuity': 'cont',
-        'diode': 'diod'}
+from . import agilentCardSwitch
 
 class dio:
     def init(self, rack, slot):
@@ -49,108 +38,15 @@ class dio:
             vars(rack).setdefault('_dio_name', []).append(f'DIN{slot:d}{i}')
             vars(rack).setdefault('_dio_size', []).append(j)
 
-class agilent44470:
-    @staticmethod
-    def init(rack, slot):
-        CHANNEL_COUNT = 10
-        COMMON_COUNT = 1
-
-        SPECS = ( # Static specifications
-                    ('_channel_characteristics_ac_current_carry_max', 2),
-                    ('_channel_characteristics_ac_current_switching_max', 2),
-                    ('_channel_characteristics_ac_power_carry_max', 500),
-                    ('_channel_characteristics_ac_power_switching_max', 500),
-                    ('_channel_characteristics_ac_voltage_max', 250),
-                    ('_channel_characteristics_bandwidth', 10e6),
-                    ('_channel_characteristics_impedance', 50),
-                    ('_channel_characteristics_dc_current_carry_max', 2),
-                    ('_channel_characteristics_dc_current_switching_max', 2),
-                    ('_channel_characteristics_dc_power_carry_max', 60),
-                    ('_channel_characteristics_dc_power_switching_max', 60),
-                    ('_channel_characteristics_dc_voltage_max', 250),
-                    ('_channel_is_configuration_channel', False),
-                    ('_channel_is_source_channel', False),
-                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
-                    ('_channel_characteristics_wire_mode', 0),
-                    ('_channel_slot', slot),
-                   )
-
-        for i in range(CHANNEL_COUNT):
-            address = slot * 100 + i
-            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
-            vars(rack).setdefault('_channel_address', []).append(address)
-            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
-
-            for j, k in SPECS:
-                vars(rack).setdefault(j, []).append(k)
-
-        for i in range(COMMON_COUNT):
-            vars(rack).setdefault('_channel_name', []).append(f'COM{address:d}')
-            vars(rack).setdefault('_channel_address', []).append(None)
-            vars(rack).setdefault('_channel_is_common_channel', []).append(True)
-
-            for j, k in SPECS:
-                vars(rack).setdefault(j, []).append(k)
-
-    @staticmethod
-    def path_connect(rack, *channels):
-        rack.relay(CLOSE, *[i for i in channels if not rack._channels_is_common_channel[i]])
-            
-    @staticmethod
-    def path_disconnect(rack, *channels):
-        rack.relay(OPEN, *[i for i in channels if not rack._channels_is_common_channel[i]])
-            
-
-class agilent44471:
-    @staticmethod
-    def init(rack, slot):
-        CHANNEL_COUNT = 10
-
-        SPECS = ( # Static specifications
-                    ('_channel_characteristics_ac_current_carry_max', 2),
-                    ('_channel_characteristics_ac_current_switching_max', 2),
-                    ('_channel_characteristics_ac_power_carry_max', 500),
-                    ('_channel_characteristics_ac_power_switching_max', 500),
-                    ('_channel_characteristics_ac_voltage_max', 250),
-                    ('_channel_characteristics_bandwidth', 10e6),
-                    ('_channel_characteristics_impedance', 50),
-                    ('_channel_characteristics_dc_current_carry_max', 2),
-                    ('_channel_characteristics_dc_current_switching_max', 2),
-                    ('_channel_characteristics_dc_power_carry_max', 60),
-                    ('_channel_characteristics_dc_power_switching_max', 60),
-                    ('_channel_characteristics_dc_voltage_max', 250),
-                    ('_channel_is_configuration_channel', False),
-                    ('_channel_is_source_channel', False),
-                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
-                    ('_channel_characteristics_wire_mode', 0),
-                    ('_channel_slot', slot),
-                   )
-
-        for i in range(CHANNEL_COUNT):
-            address = slot * 100 + i
-            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
-            vars(rack).setdefault('_channel_address', []).append(address)
-            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
-
-        for j, k in SPECS:
-            vars(rack).setdefault(j, []).append(k)
-
-    @staticmethod
-    def path_connect(rack, *channels):
-        raise swtch.PathNotFoundException  # GP relays have no paths
-
-    @staticmethod
-    def path_disconnect(rack, *channels):
-        raise swtch.PathNotFoundException  # GP relays have no paths
-
-
 OptionCardMapping = {
         'BUILD-IN DIO 3499': dio,
-        'GP RELAY 44471': agilent44471,
+        'RELAY MUX 44470': agilentCardSwitch.agilent44470,
+        'GP RELAY 44471': agilentCardSwitch.agilent44471,
+        'DIGITAL IO 44474': agilentCardSwitch.agilent44474,
         }
 
 
-class agilentBaseSwitch(scpi.swtch.Base):
+class agilentBaseSwitch():
     """Agilent IVI Switch Driver
     
        Parent class for all Agilent SCPI switches
@@ -229,8 +125,8 @@ class agilentBaseSwitch(scpi.swtch.Base):
         channel1 = ivi.get_index(self._channel_name, channel1)
         channel2 = ivi.get_index(self._channel_name, channel2)
 
-        slot = self._channel_slot(channel1)
-        if slot != self._channel_slot(channel2):
+        slot = self._channel_slot[channel1]
+        if slot != self._channel_slot[channel2]:
             raise swtch.PathNotFoundException
         else:
             return self._slot[slot].path_connect(self, channel1, channel2)
@@ -239,8 +135,8 @@ class agilentBaseSwitch(scpi.swtch.Base):
         channel1 = ivi.get_index(self._channel_name, channel1)
         channel2 = ivi.get_index(self._channel_name, channel2)
 
-        slot = self._channel_slot(channel1)
-        if slot != self._channel_slot(channel2):
+        slot = self._channel_slot[channel1]
+        if slot != self._channel_slot[channel2]:
             raise swtch.PathNotFoundException
         else:
             return self._slot[slot].path_disconnect(self, channel1, channel2)

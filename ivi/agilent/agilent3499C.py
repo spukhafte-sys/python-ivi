@@ -1,4 +1,3 @@
-
 """
 
 Python Interchangeable Virtual Instrument Library
@@ -25,9 +24,11 @@ THE SOFTWARE.
 
 """
 
-from .agilentBaseSwitch import *
+from .. import scpi
+from .  import agilentBaseSwitch
 
-class agilent3499C(agilentBaseSwitch):
+class agilent3499C(agilentBaseSwitch, scpi.swtch.Base):
     "Agilent 3499C IVI Switch Driver"
 
+    BUILD_IN_DIO = True
     SLOT_COUNT = 9
