@@ -25,10 +25,15 @@ THE SOFTWARE.
 
 """
 
+from .. import swtch
 from .  import agilentBaseSwitch
 
-class agilent3488A(agilentBaseSwitch):
+class agilent3488A(agilentBaseSwitch, swtch.Base):
     "Agilent 3488A IVI Switch Driver"
 
-    SLOT_COUNT = 5
     BUILT_IN_DIO = False
+    SLOT_COUNT = 2  # TODO change to 5 after testing with 3499B
+
+    CMD_CTYPE = 'ctype %s'
+    CMD_DISP_INFO = 'disp %s'
+    CMD_ROUT = '%s %s'

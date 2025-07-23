@@ -27,7 +27,8 @@ THE SOFTWARE.
 
 from .. import ivi
 from .. import swtch
-from . import agilentCardSwitch
+from .  import agilentCardSwitch
+
 
 class dio:
     def init(self, rack, slot):
@@ -38,12 +39,19 @@ class dio:
             vars(rack).setdefault('_dio_name', []).append(f'DIN{slot:d}{i}')
             vars(rack).setdefault('_dio_size', []).append(j)
 
+
 OptionCardMapping = {
         'BUILD-IN DIO 3499': dio,
-        'RELAY MUX 44470': agilentCardSwitch.agilent44470,
-        'GP RELAY 44471': agilentCardSwitch.agilent44471,
-        'DIGITAL IO 44474': agilentCardSwitch.agilent44474,
+        'RELAY MUX 44470': agilentCardSwitch.agilent44470A,
+        'GP RELAY 44471': agilentCardSwitch.agilent44471A,
+        'VHF SW 44472': agilentCardSwitch.agilent44472A,
+        'DIGITAL IO 44474': agilentCardSwitch.agilent44474A,
         }
+
+# SCPI command mapping
+CMD_CTYPE = 'syst:ctype? %s'
+CMD_DISP_INFO = 'diag:disp:info "%s"'
+CMD_ROUT = 'rout:%s (@%s);'
 
 
 class agilentBaseSwitch():
@@ -52,7 +60,7 @@ class agilentBaseSwitch():
        Parent class for all Agilent SCPI switches
     """
 
-    BUILT_IN_DIO_COUNT = 1
+    BUILT_IN_DIO = True  # For 3499
     
     def __init__(self, *args, cache=False, **kwargs):
         if cache:
@@ -105,15 +113,16 @@ class agilentBaseSwitch():
     def _init_cards(self):
         # Scan option cards
 
-        self._slot = list()
+        self._cards = list()
 
-        for slot in range(0, self.BUILT_IN_DIO_COUNT + self.SLOT_COUNT):
-            card_info = self._ask(f'syst:ctyp? {slot:d}').split(',')
+        offset = 0 if self.BUILT_IN_DIO else 1
+        for slot in range(offset, self.SLOT_COUNT + 1):
+            card_info = self._ask(CMD_CTYPE % f'{slot+offset:d}').split(',')
             card_type = ' '.join(card_info[0].split())  # Remove redundant whitespace
             if card_type in OptionCardMapping:
                 card = OptionCardMapping[card_type]()  # Instantiate card
                 card.init(self, slot)
-                self._slot.append(card)
+                self._cards.append(card)
 
         self.dios._set_list(self._dio_name)
         self.channels._set_list(self._channel_name)
@@ -125,21 +134,21 @@ class agilentBaseSwitch():
         channel1 = ivi.get_index(self._channel_name, channel1)
         channel2 = ivi.get_index(self._channel_name, channel2)
 
-        slot = self._channel_slot[channel1]
-        if slot != self._channel_slot[channel2]:
+        slot = self._channel_slot_id[channel1]
+        if slot != self._channel_slot_id[channel2]:
             raise swtch.PathNotFoundException
         else:
-            return self._slot[slot].path_connect(self, channel1, channel2)
+            return self._cards[slot].path_connect(self, channel1, channel2)
 
     def _path_disconnect(self, channel1, channel2):
         channel1 = ivi.get_index(self._channel_name, channel1)
         channel2 = ivi.get_index(self._channel_name, channel2)
 
-        slot = self._channel_slot[channel1]
-        if slot != self._channel_slot[channel2]:
+        slot = self._channel_slot_id[channel1]
+        if slot != self._channel_slot_id[channel2]:
             raise swtch.PathNotFoundException
         else:
-            return self._slot[slot].path_disconnect(self, channel1, channel2)
+            return self._cards[slot].path_disconnect(self, channel1, channel2)
 
     def _path_disconnect_all(self, channel1, channel2):
         raise swtch.PathNotFoundException
@@ -150,7 +159,7 @@ class agilentBaseSwitch():
     def _set_display_title(self, value):
         self._display_title = str(value).upper()
         if not self._driver_operation_simulate:
-            self._write(f'diag:disp:info "{self._display_title}"')
+            self._write(CMD_DISP_INFO % self._display_title)
 
     def relay(self, action, *args):
         clist = ''
@@ -160,4 +169,4 @@ class agilentBaseSwitch():
             else:
                 raise SelectorNameException
 
-        self._write('rout:' + ('clos' if action else 'open') + f' (@{clist});')
+        self._write(CMD_ROUT % (('close' if action else 'open'), clist))

@@ -31,5 +31,5 @@ from .  import agilentBaseSwitch
 class agilent3499B(agilentBaseSwitch, scpi.swtch.Base):
     "Agilent 3499B IVI Switch Driver"
 
-    BUILD_IN_DIO = True
+    BUILT_IN_DIO = True
     SLOT_COUNT = 2

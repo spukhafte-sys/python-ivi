@@ -27,9 +27,11 @@ THE SOFTWARE.
 
 from .. import swtch
 
-class agilent44470:
+class agilent44470A:
+    'Agilent 10-Channel MUX Module'
+
     @staticmethod
-    def init(rack, slot):
+    def init(rack, slot_id):
         CHANNEL_COUNT = 10
         COMMON_COUNT = 1
 
@@ -50,11 +52,12 @@ class agilent44470:
                     ('_channel_is_source_channel', False),
                     ('_channel_characteristics_settling_time', 0.1),  # Guessed
                     ('_channel_characteristics_wire_mode', 0),
-                    ('_channel_slot', slot),
+                    ('_channel_slot_id', slot_id),
+                    ('_channel_group_id', 0),
                    )
 
         for i in range(CHANNEL_COUNT):
-            address = slot * 100 + i
+            address = slot_id * 100 + i
             vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
             vars(rack).setdefault('_channel_address', []).append(address)
             vars(rack).setdefault('_channel_is_common_channel', []).append(False)
@@ -79,9 +82,11 @@ class agilent44470:
         rack.relay(OPEN, *[i for i in channels if not rack._channels_is_common_channel[i]])
             
 
-class agilent44471:
+class agilent44471A:
+    'Agilent 10-Channel GP Relay Module'
+
     @staticmethod
-    def init(rack, slot):
+    def init(rack, slot_id):
         CHANNEL_COUNT = 10
 
         SPECS = ( # Static specifications
@@ -101,11 +106,57 @@ class agilent44471:
                     ('_channel_is_source_channel', False),
                     ('_channel_characteristics_settling_time', 0.1),  # Guessed
                     ('_channel_characteristics_wire_mode', 0),
-                    ('_channel_slot', slot),
+                    ('_channel_slot_id', slot_id),
+                    ('_channel_group_id', 0),
                    )
 
         for i in range(CHANNEL_COUNT):
-            address = slot * 100 + i
+            address = slot_id * 100 + i
+            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
+            vars(rack).setdefault('_channel_address', []).append(address)
+            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
+
+            for j, k in SPECS:
+                vars(rack).setdefault(j, []).append(k)
+
+    @staticmethod
+    def path_connect(rack, *channels):
+        raise swtch.PathNotFoundException  # GP relays have no paths
+
+    @staticmethod
+    def path_disconnect(rack, *channels):
+        raise swtch.PathNotFoundException  # GP relays have no paths
+
+class agilent44472A:
+    'Agilent Dual 4-Channel VHF Module'
+
+    @staticmethod
+    def init(rack, slot_id):
+        CHANNEL_COUNT = 10
+
+        SPECS = ( # Static specifications
+                    ('_channel_characteristics_ac_current_carry_max', 0.3),
+                    ('_channel_characteristics_ac_current_switching_max', 0.3),
+                    ('_channel_characteristics_ac_power_carry_max', 9),
+                    ('_channel_characteristics_ac_power_switching_max', 9),
+                    ('_channel_characteristics_ac_voltage_max', 30),
+                    ('_channel_characteristics_bandwidth', 300e6),
+                    ('_channel_characteristics_impedance', 50),
+                    ('_channel_characteristics_dc_current_carry_max', 0.03),
+                    ('_channel_characteristics_dc_current_switching_max', 0.03),
+                    ('_channel_characteristics_dc_power_carry_max', 7.5),
+                    ('_channel_characteristics_dc_power_switching_max', 7.5),
+                    ('_channel_characteristics_dc_voltage_max', 250),
+                    ('_channel_is_configuration_channel', False),
+                    ('_channel_is_source_channel', False),
+                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
+                    ('_channel_characteristics_wire_mode', 0),
+                    ('_channel_slot_id', slot_id),
+                    ('_channel_group_id', 0),
+                   )
+
+        for i in range(CHANNEL_COUNT):
+            address = slot_id * 100 + i
             vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
             vars(rack).setdefault('_channel_address', []).append(address)
             vars(rack).setdefault('_channel_is_common_channel', []).append(False)
@@ -122,7 +173,9 @@ class agilent44471:
         raise swtch.PathNotFoundException  # GP relays have no paths
 
 
-class agilent44474:
+class agilent44474A:
+    'Agilent 16-Bit Digital I/O Module'
+
     @staticmethod
-    def init(rack, slot):
+    def init(rack, slot_id):
         CHANNEL_COUNT = 10
