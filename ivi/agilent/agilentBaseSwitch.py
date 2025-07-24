@@ -50,7 +50,7 @@ OptionCardMapping = {
 
 # SCPI command mapping
 CMD_CTYPE = 'syst:ctype? %s'
-CMD_DISP_INFO = 'diag:disp:info "%s"'
+CMD_DISP = 'diag:disp:info "%s"'
 CMD_ROUT = 'rout:%s (@%s);'
 
 
@@ -159,7 +159,7 @@ class agilentBaseSwitch():
     def _set_display_title(self, value):
         self._display_title = str(value).upper()
         if not self._driver_operation_simulate:
-            self._write(CMD_DISP_INFO % self._display_title)
+            self._write(CMD_DISP % self._display_title)
 
     def relay(self, action, *args):
         clist = ''
