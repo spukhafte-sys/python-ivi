@@ -25,15 +25,23 @@ THE SOFTWARE.
 
 """
 
-from .. import swtch
 from .  import agilentBaseSwitch
+from .. import ivi
+from .. import swtch
+from .. import extra
 
-class agilent3488A(agilentBaseSwitch, swtch.Base):
+class agilent3488A(agilentBaseSwitch,
+                   ivi.Driver,
+                   swtch.Base,
+                   extra.common.Title, extra.common.SerialNumber):
     "Agilent 3488A IVI Switch Driver"
+
+    CMD_CTYPE = 'CTYPE %s'
+    CMD_DISP_INFO = 'DISP %s'
+    CMD_ROUT = '%s %s'
 
     BUILT_IN_DIO = False
     SLOT_COUNT = 2  # TODO change to 5 after testing with 3499B
 
-    CMD_CTYPE = 'ctype %s'
-    CMD_DISP_INFO = 'disp %s'
-    CMD_ROUT = '%s %s'
+    def _utility_reset(self):
+        self._write('RESET')

@@ -48,17 +48,17 @@ OptionCardMapping = {
         'DIGITAL IO 44474': agilentCardSwitch.agilent44474A,
         }
 
-# SCPI command mapping
-CMD_CTYPE = 'syst:ctype? %s'
-CMD_DISP = 'diag:disp:info "%s"'
-CMD_ROUT = 'rout:%s (@%s);'
 
-
-class agilentBaseSwitch():
+class agilentBaseSwitch:
     """Agilent IVI Switch Driver
     
        Parent class for all Agilent SCPI switches
     """
+
+    # SCPI command mapping
+    CMD_CTYPE = 'syst:ctype? %s'
+    CMD_DISP = 'diag:disp:info "%s"'
+    CMD_ROUT = 'rout:%s (@%s);'
 
     BUILT_IN_DIO = True  # For 3499
     
@@ -117,7 +117,7 @@ class agilentBaseSwitch():
 
         offset = 0 if self.BUILT_IN_DIO else 1
         for slot in range(offset, self.SLOT_COUNT + 1):
-            card_info = self._ask(CMD_CTYPE % f'{slot+offset:d}').split(',')
+            card_info = self._ask(self.CMD_CTYPE % f'{slot+offset:d}').split(',')
             card_type = ' '.join(card_info[0].split())  # Remove redundant whitespace
             if card_type in OptionCardMapping:
                 card = OptionCardMapping[card_type]()  # Instantiate card
@@ -159,14 +159,14 @@ class agilentBaseSwitch():
     def _set_display_title(self, value):
         self._display_title = str(value).upper()
         if not self._driver_operation_simulate:
-            self._write(CMD_DISP % self._display_title)
+            self._write(self.CMD_DISP % self._display_title)
 
     def relay(self, action, *args):
-        clist = ''
+        clist = []
         for i in args:
             if isinstance(i, str) or isinstance(i, int):
-                clist += str(self._channel_address[ivi.get_index(self._channel_name, i)]) + ','
+                clist.append(self._channel_address[ivi.get_index(self._channel_name, i)])
             else:
                 raise SelectorNameException
 
-        self._write(CMD_ROUT % (('close' if action else 'open'), clist))
+        self._write(self.CMD_ROUT % (('close' if action else 'open'), ','.join(map(str,clist))))
