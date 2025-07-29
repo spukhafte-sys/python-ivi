@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 from .. import ivi
 from .. import swtch
+from .. import extra
 from .  import agilentCardSwitch
 
 
@@ -49,10 +50,12 @@ OptionCardMapping = {
         }
 
 
-class agilentBaseSwitch:
+class agilentBaseSwitch(#extra.common.Title, extra.common.SerialNumber,
+                        ivi.Driver,
+                        swtch.Base):
     """Agilent IVI Switch Driver
     
-       Parent class for all Agilent SCPI switches
+       Parent class for Agilent switches
     """
 
     # SCPI command mapping
