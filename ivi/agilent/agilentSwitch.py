@@ -50,9 +50,7 @@ OptionCardMapping = {
         }
 
 
-class Base(#extra.common.Title, extra.common.SerialNumber,
-#          ivi.Driver,
-           swtch.Base):
+class Base(swtch.Base):
     """Agilent IVI Switch Driver
     
        Parent class for Agilent switches
@@ -120,14 +118,15 @@ class Base(#extra.common.Title, extra.common.SerialNumber,
 
         offset = 0 if self.BUILT_IN_DIO else 1
         for slot in range(offset, self.SLOT_COUNT + 1):
-            card_info = self._ask(self.CMD_CTYPE % f'{slot+offset:d}').split(',')
+            card_info = self._ask(self.CMD_CTYPE % f'{slot:d}').split(',')
             card_type = ' '.join(card_info[0].split())  # Remove redundant whitespace
             if card_type in OptionCardMapping:
                 card = OptionCardMapping[card_type]()  # Instantiate card
                 card.init(self, slot)
                 self._cards.append(card)
 
-        self.dios._set_list(self._dio_name)
+        if self.BUILT_IN_DIO:
+            self.dios._set_list(self._dio_name)
         self.channels._set_list(self._channel_name)
 
     def _path_can_connect(self, channel1, channel2):

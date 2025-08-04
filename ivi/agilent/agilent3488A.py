@@ -25,11 +25,15 @@ THE SOFTWARE.
 
 """
 
-from .  import agilentSwitch
 from .. import extra
+from .. import ivi
+from .  import agilentSwitch
+from .. import swtch
 
 class agilent3488A(agilentSwitch.Base,
-                   extra.common.Title, extra.common.SerialNumber):
+                   extra.common.Title, extra.common.SerialNumber,
+                   ivi.Driver,
+                   swtch.Base):
     "Agilent 3488A IVI Switch Driver"
 
     CMD_CTYPE = 'CTYPE %s'
@@ -40,7 +44,7 @@ class agilent3488A(agilentSwitch.Base,
     SLOT_COUNT = 2  # TODO change to 5 after testing with 3499B
 
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
         self._identity_description = "Agilent 3488 IVI Switch Driver"
         self._identity_identifier = ""
