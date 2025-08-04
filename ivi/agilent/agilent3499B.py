@@ -1,4 +1,3 @@
-
 """
 
 Python Interchangeable Virtual Instrument Library
@@ -25,11 +24,11 @@ THE SOFTWARE.
 
 """
 
+from .  import agilentSwitch
 from .. import scpi
-from .  import agilentBaseSwitch
 
-class agilent3499B(scpi.swtch.Base,
-                   agilentBaseSwitch):
+class agilent3499B(agilentSwitch.Base,
+                   scpi.swtch.Base):
     "Agilent 3499B IVI Switch Driver"
 
     BUILT_IN_DIO = True

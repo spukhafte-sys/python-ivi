@@ -25,15 +25,15 @@ THE SOFTWARE.
 
 """
 
+from .  import agilentSwitch
 from .. import extra
-from .  import agilentBaseSwitch
 
-class agilent3488A(extra.common.Title, extra.common.SerialNumber,
-                   agilentBaseSwitch):
+class agilent3488A(agilentSwitch.Base,
+                   extra.common.Title, extra.common.SerialNumber):
     "Agilent 3488A IVI Switch Driver"
 
     CMD_CTYPE = 'CTYPE %s'
-    CMD_DISP_INFO = 'DISP %s'
+    CMD_DISP = 'DISP %s'
     CMD_ROUT = '%s %s'
 
     BUILT_IN_DIO = False
@@ -41,6 +41,17 @@ class agilent3488A(extra.common.Title, extra.common.SerialNumber,
 
     def __init__(self, *args, **kwargs):
         super().__init__()
+
+        self._identity_description = "Agilent 3488 IVI Switch Driver"
+        self._identity_identifier = ""
+        self._identity_revision = ""
+        self._identity_vendor = ""
+        self._identity_instrument_manufacturer = "Agilent Technologies, Inc."
+        self._identity_instrument_model = ""
+        self._identity_instrument_firmware_revision = ""
+        self._identity_specification_major_version = 4
+        self._identity_specification_minor_version = 1
+        self._identity_supported_instrument_models = ['3488A',]
 
     def _utility_reset(self):
         self._write('RESET')

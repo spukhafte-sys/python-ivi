@@ -31,7 +31,7 @@ from .. import extra
 from .  import agilentCardSwitch
 
 
-class dio:
+class Dio:
     def init(self, rack, slot):
         DIOS = ((90,4),
                 (91,1), (92,1), (93,1), (94,1)) 
@@ -42,7 +42,7 @@ class dio:
 
 
 OptionCardMapping = {
-        'BUILD-IN DIO 3499': dio,
+        'BUILD-IN DIO 3499': Dio,
         'RELAY MUX 44470': agilentCardSwitch.agilent44470A,
         'GP RELAY 44471': agilentCardSwitch.agilent44471A,
         'VHF SW 44472': agilentCardSwitch.agilent44472A,
@@ -50,9 +50,9 @@ OptionCardMapping = {
         }
 
 
-class agilentBaseSwitch(#extra.common.Title, extra.common.SerialNumber,
-                        ivi.Driver,
-                        swtch.Base):
+class Base(#extra.common.Title, extra.common.SerialNumber,
+#          ivi.Driver,
+           swtch.Base):
     """Agilent IVI Switch Driver
     
        Parent class for Agilent switches

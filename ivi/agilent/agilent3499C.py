@@ -24,10 +24,11 @@ THE SOFTWARE.
 
 """
 
+from .  import agilentSwitch
 from .. import scpi
-from .  import agilentBaseSwitch
 
-class agilent3499C(agilentBaseSwitch, scpi.swtch.Base):
+class agilent3499C(agilentSwitch.Base,
+                   scpi.swtch.Base):
     "Agilent 3499C IVI Switch Driver"
 
     BUILT_IN_DIO = True

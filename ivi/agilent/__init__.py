@@ -275,7 +275,7 @@ from .agilent86146B import agilent86146B
 from .agilent8156A import agilent8156A
 
 # Switches
-from .agilentBaseSwitch import agilentBaseSwitch
+#from .agilentSwitch import agilentSwitch
 #from .agilentCardSwitch import agilentCardSwitch
 from .agilent3488A import agilent3488A
 from .agilent3499A import agilent3499A
