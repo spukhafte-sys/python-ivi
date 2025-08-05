@@ -31,14 +31,18 @@ from .. import extra
 from .  import agilentCardSwitch
 
 
+BIT, BYTE, WORD, LWORD = (1,2,4,8)
+
 class Dio:
     def init(self, rack, slot):
-        DIOS = ((90,4),
-                (91,1), (92,1), (93,1), (94,1)) 
+        DIOS = ((90, 1, BYTE),
+                (91, 4, BIT),) 
 
-        for i,j in DIOS:
-            vars(rack).setdefault('_dio_name', []).append(f'DIN{slot:d}{i}')
-            vars(rack).setdefault('_dio_size', []).append(j)
+        for start, count, mask in DIOS:
+            for i in range(start, start+count):
+                vars(rack).setdefault('_dio_name', []).append(f'DIO{i:03d}')
+                vars(rack).setdefault('_dio_address', []).append(i)
+                vars(rack).setdefault('_dio_mask', []).append(mask)
 
 
 OptionCardMapping = {
@@ -60,6 +64,8 @@ class Base(swtch.Base):
     CMD_CTYPE = 'syst:ctype? %s'
     CMD_DISP = 'diag:disp:info "%s"'
     CMD_ROUT = 'rout:%s (@%s);'
+    CMD_DIO_READ = 'sens:dig:data:%s? %s'
+    CMD_DIO_WRITE = 'sour:dig:data:%s %s,%s'
 
     BUILT_IN_DIO = True  # For 3499
     
@@ -125,7 +131,7 @@ class Base(swtch.Base):
                 card.init(self, slot)
                 self._cards.append(card)
 
-        if self.BUILT_IN_DIO:
+        if len(self._dio_name):
             self.dios._set_list(self._dio_name)
         self.channels._set_list(self._channel_name)
 
@@ -172,3 +178,28 @@ class Base(swtch.Base):
                 raise SelectorNameException
 
         self._write(self.CMD_ROUT % (('close' if action else 'open'), ','.join(map(str,clist))))
+
+    def _get_dio(self, address, size):
+        return int(self._ask(self.CMD_DIO_READ % (size, address)))
+
+    def _set_dio(self, address, size, value):
+        self._write(self.CMD_DIO_WRITE % (size, address, value))
+
+    def _get_dio_bit(self, index):
+        return self._get_dio(self._dio_address[index], 'bit')
+
+    def _get_dio_byte(self, index):
+        return self._get_dio(self._dio_address[index], 'byte')
+
+    def _get_dio_word(self, index):
+        return self._get_dio(self._dio_address[index], 'word')
+
+    def _set_dio_bit(self, index, value):
+        self._set_dio(self._dio_address[index], 'bit', int(value)) 
+
+    def _set_dio_byte(self, index, value):
+        self._set_dio(self._dio_address[index], 'byte', int(value)) 
+
+    def _set_dio_word(self, index, value):
+        self._set_dio(self._dio_address[index], 'word', int(value)) 
+

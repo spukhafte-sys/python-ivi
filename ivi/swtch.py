@@ -91,10 +91,7 @@ class Base(ivi.IviContainer):
         self._path_is_debounced = False
 
         self._dio_name = list()
-        self._dio_size = list()
 
-        self._ext_name = list()
-        
         self._add_property('channels[].name',
                         self._get_channel_name,
                         None,
@@ -353,11 +350,21 @@ class Base(ivi.IviContainer):
                         None,
                         """
                         """)
-        self._add_property('dios[].size',
-                        self._get_dio_size,
+        self._add_property('dios[].bit',
+                        self._get_dio_bit,
+                        self._set_dio_bit,
                         None,
+                        """This attribute returns a bit of digital I/O.""")
+        self._add_property('dios[].byte',
+                        self._get_dio_byte,
+                        self._set_dio_byte,
                         None,
-                        """This attribute returns the size in bits of the digital I/O.""")
+                        """This attribute returns a byte of digital I/O.""")
+        self._add_property('dios[].word',
+                        self._get_dio_word,
+                        self._set_dio_word,
+                        None,
+                        """This attribute returns a word of digital I/O.""")
 
         self._add_method('path.can_connect',
                         self._path_can_connect,
@@ -662,9 +669,23 @@ class Base(ivi.IviContainer):
         index = ivi.get_index(self._dio_name, index)
         self._dio_mode[index] = int(value)
 
-    def _get_dio_size(self, index):
-        index = ivi.get_index(self._dio_name, index)
-        return self._dio_size[index]
+    def _get_dio_bit(self, index):
+        pass
+
+    def _set_dio_bit(self, index, value):
+        pass
+
+    def _get_dio_byte(self, index):
+        pass
+
+    def _set_dio_byte(self, index, value):
+        pass
+
+    def _get_dio_word(self, index):
+        pass
+
+    def _set_dio_word(self, index, value):
+        pass
     
     def _path_can_connect(self, channel1, channel2):
         channel1 = ivi.get_index(self._channel_name, channel1)

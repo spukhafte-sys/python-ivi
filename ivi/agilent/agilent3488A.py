@@ -41,7 +41,7 @@ class agilent3488A(agilentSwitch.Base,
     CMD_ROUT = '%s %s'
 
     BUILT_IN_DIO = False
-    SLOT_COUNT = 2  # TODO change to 5 after testing with 3499B
+    SLOT_COUNT = 5
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

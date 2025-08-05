@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 from .. import swtch
 
+BIT, BYTE, WORD, LWORD = (1,2,4,8)
+
 class agilent44470A:
     'Agilent 10-Channel MUX Module'
 
@@ -178,4 +180,17 @@ class agilent44474A:
 
     @staticmethod
     def init(rack, slot_id):
-        CHANNEL_COUNT = 10
+        DIOS = ((1, BIT|BYTE|WORD, 7), (1, BIT|BYTE, 3), (14, BIT, 1))
+
+        i = 0
+        for count, mask, size in DIOS:
+            for j in range(count):
+                address = slot_id * 100 + i + j
+                vars(rack).setdefault('_dio_name', []).append(f'DIO{address:03d}')
+                vars(rack).setdefault('_dio_address', []).append(address)
+                vars(rack).setdefault('_dio_mask', []).append(size)
+            i += count
+
+#           for j, k in SPECS:
+#               vars(rack).setdefault(j, []).append(k)
+
