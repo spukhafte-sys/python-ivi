@@ -169,7 +169,13 @@ class Base(swtch.Base):
         if not self._driver_operation_simulate:
             self._write(self.CMD_DISP % self._display_title)
 
-    def relay(self, action, *args):
+    def _relay_open(self, *args):
+        return self._relay_action(False, *args)
+
+    def _relay_close(self, *args):
+        return self._relay_action(True, *args)
+
+    def _relay_action(self, action, *args):
         clist = []
         for i in args:
             if isinstance(i, str) or isinstance(i, int):

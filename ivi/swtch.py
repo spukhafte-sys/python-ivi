@@ -561,6 +561,13 @@ class Base(ivi.IviContainer):
                         period the user specified with the maximum_time parameter, the function
                         returns the Max Time Exceeded error.
                         """, cls, grp, '4.3.9'))
+        self._add_method('relay.close',
+                        self._relay_close,
+                        ivi.Doc(""" """, cls, grp, '4.3.9'))
+        self._add_method('relay.open',
+                        self._relay_open,
+                        ivi.Doc(""" """, cls, grp, '4.3.9'))
+
 
         
     def _get_channel_name(self, index):
