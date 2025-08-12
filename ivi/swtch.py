@@ -693,6 +693,12 @@ class Base(ivi.IviContainer):
 
     def _set_dio_word(self, index, value):
         pass
+
+    def _relay_close(self, index):
+        pass
+
+    def _relay_open(self, index):
+        pass
     
     def _path_can_connect(self, channel1, channel2):
         channel1 = ivi.get_index(self._channel_name, channel1)

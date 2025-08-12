@@ -40,7 +40,7 @@ class Dio:
 
         for start, count, mask in DIOS:
             for i in range(start, start+count):
-                vars(rack).setdefault('_dio_name', []).append(f'DIO{i:03d}')
+                vars(rack).setdefault('_dio_name', []).append(f'D{i:03d}')
                 vars(rack).setdefault('_dio_address', []).append(i)
                 vars(rack).setdefault('_dio_mask', []).append(mask)
 

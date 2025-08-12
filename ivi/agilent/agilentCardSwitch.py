@@ -84,6 +84,52 @@ class agilent44470A:
         rack.relay(OPEN, *[i for i in channels if not rack._channels_is_common_channel[i]])
             
 
+class agilent44470A:
+    'Agilent 10-Channel MUX Module'
+
+    @staticmethod
+    def init(rack, slot_id):
+        CHANNEL_COUNT = 10
+
+        SPECS = ( # Static specifications
+                    ('_channel_characteristics_ac_current_carry_max', 2),
+                    ('_channel_characteristics_ac_current_switching_max', 2),
+                    ('_channel_characteristics_ac_power_carry_max', 500),
+                    ('_channel_characteristics_ac_power_switching_max', 500),
+                    ('_channel_characteristics_ac_voltage_max', 250),
+                    ('_channel_characteristics_bandwidth', 10e6),
+                    ('_channel_characteristics_impedance', 50),
+                    ('_channel_characteristics_dc_current_carry_max', 2),
+                    ('_channel_characteristics_dc_current_switching_max', 2),
+                    ('_channel_characteristics_dc_power_carry_max', 60),
+                    ('_channel_characteristics_dc_power_switching_max', 60),
+                    ('_channel_characteristics_dc_voltage_max', 250),
+                    ('_channel_is_configuration_channel', False),
+                    ('_channel_is_source_channel', False),
+                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
+                    ('_channel_characteristics_wire_mode', 0),
+                    ('_channel_slot_id', slot_id),
+                    ('_channel_group_id', 0),
+                   )
+
+        for i in range(CHANNEL_COUNT):
+            address = slot_id * 100 + i
+            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
+            vars(rack).setdefault('_channel_address', []).append(address)
+            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
+
+            for j, k in SPECS:
+                vars(rack).setdefault(j, []).append(k)
+
+    @staticmethod
+    def path_connect(rack, *channels):
+        pass  # TODO: 
+
+    @staticmethod
+    def path_disconnect(rack, *channels):
+        pass  # TODO: 
+
+
 class agilent44471A:
     'Agilent 10-Channel GP Relay Module'
 
@@ -186,7 +232,7 @@ class agilent44474A:
         for count, mask, size in DIOS:
             for j in range(count):
                 address = slot_id * 100 + i + j
-                vars(rack).setdefault('_dio_name', []).append(f'DIO{address:03d}')
+                vars(rack).setdefault('_dio_name', []).append(f'D{address:03d}')
                 vars(rack).setdefault('_dio_address', []).append(address)
                 vars(rack).setdefault('_dio_mask', []).append(size)
             i += count
