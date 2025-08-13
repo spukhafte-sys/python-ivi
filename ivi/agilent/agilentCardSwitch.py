@@ -140,31 +140,26 @@ class agilent44471A:
         CHANNEL_COUNT = 10
 
         SPECS = ( # Static specifications
-                    ('_channel_characteristics_ac_current_carry_max', 2),
-                    ('_channel_characteristics_ac_current_switching_max', 2),
-                    ('_channel_characteristics_ac_power_carry_max', 500),
-                    ('_channel_characteristics_ac_power_switching_max', 500),
-                    ('_channel_characteristics_ac_voltage_max', 250),
-                    ('_channel_characteristics_bandwidth', 10e6),
-                    ('_channel_characteristics_impedance', 50),
-                    ('_channel_characteristics_dc_current_carry_max', 2),
-                    ('_channel_characteristics_dc_current_switching_max', 2),
-                    ('_channel_characteristics_dc_power_carry_max', 60),
-                    ('_channel_characteristics_dc_power_switching_max', 60),
-                    ('_channel_characteristics_dc_voltage_max', 250),
-                    ('_channel_is_configuration_channel', False),
-                    ('_channel_is_source_channel', False),
-                    ('_channel_characteristics_settling_time', 0.1),  # Guessed
-                    ('_channel_characteristics_wire_mode', 0),
-                    ('_channel_slot_id', slot_id),
-                    ('_channel_group_id', 0),
+                    ('_relays_characteristics_ac_current_carry_max', 2),
+                    ('_relays_characteristics_ac_current_switching_max', 2),
+                    ('_relays_characteristics_ac_power_carry_max', 500),
+                    ('_relays_characteristics_ac_power_switching_max', 500),
+                    ('_relays_characteristics_ac_voltage_max', 250),
+                    ('_relays_characteristics_bandwidth', 10e6),
+                    ('_relays_characteristics_impedance', 50),
+                    ('_relays_characteristics_dc_current_carry_max', 2),
+                    ('_relays_characteristics_dc_current_switching_max', 2),
+                    ('_relays_characteristics_dc_power_carry_max', 60),
+                    ('_relays_characteristics_dc_power_switching_max', 60),
+                    ('_relays_characteristics_dc_voltage_max', 250),
+                    ('_relays_characteristics_settling_time', 0.1),  # Guessed
+                    ('_relays_characteristics_wire_mode', 0),
+                    ('_relays_slot_id', slot_id),
+                    ('_relays_group_id', 0),
                    )
 
         for i in range(CHANNEL_COUNT):
             address = slot_id * 100 + i
-            vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
-            vars(rack).setdefault('_channel_address', []).append(address)
-            vars(rack).setdefault('_channel_is_common_channel', []).append(False)
             vars(rack).setdefault('_relay_name', []).append(f'R{address:03d}')
             vars(rack).setdefault('_relay_address', []).append(address)
 
@@ -232,15 +227,26 @@ class agilent44474A:
     def init(rack, slot_id):
         DIOS = ((1, BIT|BYTE|WORD, 7), (1, BIT|BYTE, 3), (14, BIT, 1))
 
+        SPECS = ( # Static specifications
+            ('_dio_characteristics_output_dc_voltage_high', 2.4),
+            ('_dio_characteristics_output_dc_voltage_low', 0.8),
+            ('_dio_characteristics_output_dc_current_high', 0.008),
+            ('_dio_characteristics_output_dc_current_low', -0.016),
+            ('_dio_characteristics_input_dc_voltage_high', 2.0),
+            ('_dio_characteristics_input_dc_voltage_low', 0.8),
+            ('_dio_slot_id', slot_id),
+            ('_dio_group_id', 0),
+            )
+
         i = 0
         for count, mask, size in DIOS:
             for j in range(count):
                 address = slot_id * 100 + i + j
-                vars(rack).setdefault('_dio_name', []).append(f'D{address:03d}')
-                vars(rack).setdefault('_dio_address', []).append(address)
-                vars(rack).setdefault('_dio_mask', []).append(size)
+                getattr(rack, '_dio_name').append(f'D{address:03d}')
+                getattr(rack, '_dio_address').append(address)
+                getattr(rack, '_dio_mask').append(size)
+
+                for spec, value in SPECS:
+                    getattr(rack, spec).append(value)
+
             i += count
-
-#           for j, k in SPECS:
-#               vars(rack).setdefault(j, []).append(k)
-

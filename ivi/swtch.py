@@ -69,6 +69,9 @@ class Base(ivi.IviContainer):
         ivi.add_group_capability(self, cls+grp)
         
         self._channel_name = list()
+        self._channel_slot_id = list()
+        self._channel_group_id = list()
+        self._channel_address = list()
         self._channel_characteristics_ac_current_carry_max = list()
         self._channel_characteristics_ac_current_switching_max = list()
         self._channel_characteristics_ac_power_carry_max = list()
@@ -91,6 +94,9 @@ class Base(ivi.IviContainer):
         self._path_is_debounced = False
 
         self._relay_name = list()
+        self._relay_slot_id = list()
+        self._relay_group_id = list()
+        self._relay_address = list()
         self._relay_characteristics_ac_current_carry_max = list()
         self._relay_characteristics_ac_current_switching_max = list()
         self._relay_characteristics_ac_power_carry_max = list()
@@ -106,8 +112,16 @@ class Base(ivi.IviContainer):
         self._relay_characteristics_settling_time = list()
 
         self._dio_name = list()
-        self._dio_characteristics_dc_voltage_max = list()
-        self._dio_characteristics_dc_voltage_min = list()
+        self._dio_slot_id = list()
+        self._dio_group_id = list()
+        self._dio_address = list()
+        self._dio_mask = list()
+        self._dio_characteristics_output_dc_voltage_high = list()
+        self._dio_characteristics_output_dc_voltage_low = list()
+        self._dio_characteristics_output_dc_current_high = list()
+        self._dio_characteristics_output_dc_current_low = list()
+        self._dio_characteristics_input_dc_voltage_high = list()
+        self._dio_characteristics_input_dc_voltage_low = list()
 
         self._add_property('channels[].name',
                         self._get_channel_name,
@@ -538,7 +552,50 @@ class Base(ivi.IviContainer):
                         self._set_dio_word,
                         None,
                         """This attribute returns a word of digital I/O.""")
-
+        self._add_property('dios[].characteristics.output.dc_voltage_high',
+                        self._get_channel_characteristics_dc_current_carry_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC current the channel can carry, in amperes.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.11'))
+        self._add_property('dios[].characteristics.output.dc_voltage_low',
+                        self._get_channel_characteristics_dc_current_switching_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC current the channel can switch, in amperes
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.12'))
+        self._add_property('dios[].characteristics.input.dc_voltage_high',
+                        self._get_channel_characteristics_dc_power_carry_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC power the channel can handle, in watts.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.13'))
+        self._add_property('dios[].characteristics.input.dc_voltage_low',
+                        self._get_channel_characteristics_dc_power_switching_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC power the channel can switch, in watts.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.14'))
         self._add_method('path.can_connect',
                         self._path_can_connect,
                         ivi.Doc("""

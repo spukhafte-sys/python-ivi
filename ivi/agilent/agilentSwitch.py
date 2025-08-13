@@ -34,15 +34,26 @@ from .  import agilentCardSwitch
 BIT, BYTE, WORD, LWORD = (1,2,4,8)
 
 class Dio:
-    def init(self, rack, slot):
+    def init(self, rack, slot_id):
         DIOS = ((90, 1, BYTE),
                 (91, 4, BIT),) 
 
+        SPECS = ( # Static specifications
+            ('_dio_characteristics_output_dc_voltage_high', 2.4),
+            ('_dio_characteristics_output_dc_voltage_low', 0.8),
+            ('_dio_characteristics_output_dc_current_high', 0.001),
+            ('_dio_characteristics_output_dc_current_low', -0.100),
+            ('_dio_characteristics_input_dc_voltage_high', 2.0),
+            ('_dio_characteristics_input_dc_voltage_low', 0.8),
+            ('_dio_slot_id', slot_id),
+            ('_dio_group_id', 0),
+            )
+
         for start, count, mask in DIOS:
             for i in range(start, start+count):
-                vars(rack).setdefault('_dio_name', []).append(f'D{i:03d}')
-                vars(rack).setdefault('_dio_address', []).append(i)
-                vars(rack).setdefault('_dio_mask', []).append(mask)
+                getattr(rack, '_dio_name').append(f'D{i:03d}')
+                getattr(rack, '_dio_address').append(i)
+                getattr(rack, '_dio_mask').append(mask)
 
 
 OptionCardMapping = {
@@ -178,7 +189,7 @@ class Base(swtch.Base):
         clist = []
         for i in args:
             if isinstance(i, str) or isinstance(i, int):
-                clist.append(self._channel_address[ivi.get_index(self._channel_name, i)])
+                clist.append(self._relay_address[ivi.get_index(self._relay_name, i)])
             else:
                 raise SelectorNameException
 
