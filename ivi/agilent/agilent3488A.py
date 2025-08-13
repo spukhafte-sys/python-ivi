@@ -33,8 +33,7 @@ from .. import swtch
 class agilent3488A(agilentSwitch.Base,
                    extra.common.Title, extra.common.SerialNumber,
                    ivi.Driver,
-                   swtch.Base,
-                   ):
+                   swtch.Base):
     "Agilent 3488A IVI Switch Driver"
 
     CMD_CTYPE = 'CTYPE %s'

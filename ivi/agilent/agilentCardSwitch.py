@@ -117,6 +117,8 @@ class agilent44470A:
             vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
             vars(rack).setdefault('_channel_address', []).append(address)
             vars(rack).setdefault('_channel_is_common_channel', []).append(False)
+            vars(rack).setdefault('_relay_name', []).append(f'R{address:03d}')
+            vars(rack).setdefault('_relay_address', []).append(address)
 
             for j, k in SPECS:
                 vars(rack).setdefault(j, []).append(k)
@@ -163,6 +165,8 @@ class agilent44471A:
             vars(rack).setdefault('_channel_name', []).append(f'CH{address:03d}')
             vars(rack).setdefault('_channel_address', []).append(address)
             vars(rack).setdefault('_channel_is_common_channel', []).append(False)
+            vars(rack).setdefault('_relay_name', []).append(f'R{address:03d}')
+            vars(rack).setdefault('_relay_address', []).append(address)
 
             for j, k in SPECS:
                 vars(rack).setdefault(j, []).append(k)

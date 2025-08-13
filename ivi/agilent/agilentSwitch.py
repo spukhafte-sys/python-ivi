@@ -78,9 +78,6 @@ class Base(swtch.Base):
         
         super().__init__(*args, **kwargs)
         
-        self._channel_count = 101
-        self._memory_size = 5
-
         self._identity_description = "Agilent 3499 IVI Switch Driver"
         self._identity_identifier = ""
         self._identity_revision = ""
@@ -131,9 +128,11 @@ class Base(swtch.Base):
                 card.init(self, slot)
                 self._cards.append(card)
 
+        self.channels._set_list(self._channel_name)
+        if len(self._relay_name):
+            self.relays._set_list(self._relay_name)
         if len(self._dio_name):
             self.dios._set_list(self._dio_name)
-        self.channels._set_list(self._channel_name)
 
     def _path_can_connect(self, channel1, channel2):
         return False

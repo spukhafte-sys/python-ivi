@@ -90,7 +90,24 @@ class Base(ivi.IviContainer):
 
         self._path_is_debounced = False
 
+        self._relay_name = list()
+        self._relay_characteristics_ac_current_carry_max = list()
+        self._relay_characteristics_ac_current_switching_max = list()
+        self._relay_characteristics_ac_power_carry_max = list()
+        self._relay_characteristics_ac_power_switching_max = list()
+        self._relay_characteristics_ac_voltage_max = list()
+        self._relay_characteristics_bandwidth = list()
+        self._relay_characteristics_impedance = list()
+        self._relay_characteristics_dc_current_carry_max = list()
+        self._relay_characteristics_dc_current_switching_max = list()
+        self._relay_characteristics_dc_power_carry_max = list()
+        self._relay_characteristics_dc_power_switching_max = list()
+        self._relay_characteristics_dc_voltage_max = list()
+        self._relay_characteristics_settling_time = list()
+
         self._dio_name = list()
+        self._dio_characteristics_dc_voltage_max = list()
+        self._dio_characteristics_dc_voltage_min = list()
 
         self._add_property('channels[].name',
                         self._get_channel_name,
@@ -336,6 +353,162 @@ class Base(ivi.IviContainer):
                         assuming that the switches in the path have the correct characteristics.
                         If False, the switch module has not settled.
                         """, cls, grp, '4.2.17'))
+        self._add_property('relays[].name',
+                        self._get_relay_name,
+                        None,
+                        None,
+                        """
+                        This attribute returns the physical name identifier defined by the
+                        specific driver for the digital I/O pin.
+                        """)
+        self._add_property('relays[].characteristics.ac_current_carry_max',
+                        self._get_channel_characteristics_ac_current_carry_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum AC current the channel can carry, in amperes RMS.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.1'))
+        self._add_property('relays[].characteristics.ac_current_switching_max',
+                        self._get_channel_characteristics_ac_current_switching_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum AC current the channel can switch, in amperes RMS.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.2'))
+        self._add_property('relays[].characteristics.ac_power_carry_max',
+                        self._get_channel_characteristics_ac_power_carry_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum AC power the channel can handle, in volt-amperes.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.3'))
+        self._add_property('relays[].characteristics.ac_power_switching_max',
+                        self._get_channel_characteristics_ac_power_switching_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum AC power the channel can switch, in volt-amperes.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.4'))
+        self._add_property('relays[].characteristics.ac_voltage_max',
+                        self._get_channel_characteristics_ac_voltage_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum AC voltage the channel can handle, in volts RMS.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.5'))
+        self._add_property('relays[].characteristics.bandwidth',
+                        self._get_channel_characteristics_bandwidth,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum frequency signal, in Hertz, that can pass through the channel.
+                        without attenuating it by more than 3dB.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.6'))
+        self._add_property('relays[].characteristics.impedance',
+                        self._get_channel_characteristics_impedance,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The characteristic impedance of the channel, in ohms.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.10'))
+        self._add_property('relays[].characteristics.dc_current_carry_max',
+                        self._get_channel_characteristics_dc_current_carry_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC current the channel can carry, in amperes.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.11'))
+        self._add_property('relays[].characteristics.dc_current_switching_max',
+                        self._get_channel_characteristics_dc_current_switching_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC current the channel can switch, in amperes
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.12'))
+        self._add_property('relays[].characteristics.dc_power_carry_max',
+                        self._get_channel_characteristics_dc_power_carry_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC power the channel can handle, in watts.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.13'))
+        self._add_property('relays[].characteristics.dc_power_switching_max',
+                        self._get_channel_characteristics_dc_power_switching_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC power the channel can switch, in watts.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.14'))
+        self._add_property('relays[].characteristics.dc_voltage_max',
+                        self._get_channel_characteristics_dc_voltage_max,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum DC voltage the channel can handle, in volts.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        """, cls, grp, '4.2.15'))
+        self._add_property('relays[].characteristics.settling_time',
+                        self._get_channel_characteristics_settling_time,
+                        None,
+                        None,
+                        ivi.Doc("""
+                        The maximum total settling time for the channel before the signal going
+                        through it is considered stable. This includes both the activation time
+                        for the channel as well as any debounce time.
+                        
+                        Notice that values for this attribute are on per-channel basis and may not
+                        take into account the other switches that make up a path to or from this
+                        channel.
+                        
+                        The units are seconds.
+                        """, cls, grp, '4.2.19'))
         self._add_property('dios[].name',
                         self._get_dio_name,
                         None,
@@ -568,7 +741,6 @@ class Base(ivi.IviContainer):
                         self._relay_open,
                         ivi.Doc(""" """, cls, grp, '4.3.9'))
 
-
         
     def _get_channel_name(self, index):
         index = ivi.get_index(self._channel_name, index)
@@ -663,6 +835,10 @@ class Base(ivi.IviContainer):
     def _get_path_is_debounced(self, index):
         index = ivi.get_index(self._channel_name, index)
         return self._path_is_debounced[index]
+
+    def _get_relay_name(self, index):
+        index = ivi.get_index(self._relay_name, index)
+        return self._relay_name[index]
 
     def _get_dio_name(self, index):
         index = ivi.get_index(self._dio_name, index)
